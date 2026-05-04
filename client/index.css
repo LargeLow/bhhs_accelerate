@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-bhhs-maroon text-white px-4 py-2 rounded text-sm font-medium hover:bg-bhhs-dark transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-white text-bhhs-maroon border border-bhhs-maroon px-4 py-2 rounded text-sm font-medium hover:bg-bhhs-cream transition-colors;
+  }
+  .copy-block {
+    @apply bg-white border border-gray-200 rounded-lg p-4 relative;
+  }
+}
