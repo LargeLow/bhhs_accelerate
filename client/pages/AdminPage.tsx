@@ -19,17 +19,19 @@ export default function AdminPage() {
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const files = (form.elements.namedItem('pdfs') as HTMLInputElement).files;
-    if (!files || files.length === 0) return;
+    const file1 = (form.elements.namedItem('pdf1') as HTMLInputElement).files?.[0];
+    const file2 = (form.elements.namedItem('pdf2') as HTMLInputElement).files?.[0];
+    const file3 = (form.elements.namedItem('pdf3') as HTMLInputElement).files?.[0];
+    if (!file1) return;
 
     setUploading(true);
     setUploadError('');
     setUploadSuccess('');
 
     const formData = new FormData();
-    for (const file of Array.from(files)) {
-      formData.append('pdfs', file);
-    }
+    formData.append('pdfs', file1);
+    if (file2) formData.append('pdfs', file2);
+    if (file3) formData.append('pdfs', file3);
 
     try {
       const res = await fetch('/api/admin/campaigns', {
@@ -84,25 +86,50 @@ export default function AdminPage() {
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Upload PDF</h2>
           <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <form onSubmit={handleUpload} className="flex items-end gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  1000WATT PDFs
-                  <span className="ml-2 text-xs text-gray-400 font-normal">Select 1–3 files (hold ⌘ to select multiple)</span>
-                </label>
-                <input
-                  type="file"
-                  name="pdfs"
-                  accept="application/pdf"
-                  multiple
-                  required
-                  className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-bhhs-maroon file:text-white hover:file:bg-bhhs-dark file:cursor-pointer"
-                />
+            <form onSubmit={handleUpload} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Research PDF <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="pdf1"
+                    accept="application/pdf"
+                    required
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-bhhs-maroon file:text-white hover:file:bg-bhhs-dark file:cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Survey methodology + full data</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Topic Drop PDF <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="pdf2"
+                    accept="application/pdf"
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 file:cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Highlights + agent examples</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional PDF <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="pdf3"
+                    accept="application/pdf"
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 file:cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">If a third file arrives</p>
+                </div>
               </div>
               <button
                 type="submit"
                 disabled={uploading}
-                className="btn-primary disabled:opacity-60 whitespace-nowrap"
+                className="btn-primary disabled:opacity-60"
               >
                 {uploading ? 'Processing… (30–60s)' : 'Upload & Process'}
               </button>
