@@ -21,7 +21,7 @@ export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedCo
   const response = await client.messages.create(
     {
       model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
+      max_tokens: 16000,
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -41,11 +41,14 @@ export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedCo
     { timeout: 180_000 } // 3-minute hard timeout
   );
 
-  console.log(`[claude] response received — stop_reason: ${response.stop_reason}`);
-
   const textBlock = response.content.find((b) => b.type === 'text');
   if (!textBlock || textBlock.type !== 'text') {
     throw new Error('No text content in Claude response');
+  }
+
+  console.log(`[claude] response received — stop_reason: ${response.stop_reason}, output_tokens: ${response.usage.output_tokens}`);
+  if (response.stop_reason === 'max_tokens') {
+    throw new Error(`Claude hit max_tokens (${response.usage.output_tokens}) — JSON was truncated`);
   }
 
   return parseGeneratedContent(textBlock.text);
