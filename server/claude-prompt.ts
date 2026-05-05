@@ -11,7 +11,7 @@ and social media. It must be polished and brand-appropriate from the first word.
 BRAND VOICE
 - Authoritative but warm. Confident without being boastful.
 - Grounded in data and local expertise. Never vague.
-- "Good to Know.™" is the BHHS tagline — use it as a closer on Instagram and Facebook only.
+- "Good to Know.®" is the BHHS tagline — use it as a closer on Instagram and Facebook only.
 - Never use exclamation marks. Periods only. Measured confidence.
 - Never use the word "excited" or "thrilled."
 - Utah-specific language is encouraged: mention Utah, specific cities when natural, local context.
@@ -28,14 +28,14 @@ PLATFORM REQUIREMENTS
 instagram:
   - 3 caption variations. Each self-contained, different tone (punchy / stat-led / conversational).
   - Max 300 words each.
-  - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.™"
+  - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.®"
   - 1 shared hashtag block: 10 hashtags, mix of Utah-specific and topic-specific.
   - 1 imagery direction paragraph describing angle, mood, subjects, and Canva treatment.
   - 1 Canva/AI image prompt for Midjourney or DALL-E if the agent wants an AI-generated background.
 
 facebook:
   - 2 post variations. One educational/shareable (400 words max). One short/ad-friendly (150 words max).
-  - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.™ → [Agent URL]"
+  - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.® → [Agent URL]"
   - 1 imagery direction paragraph.
 
 linkedin:
@@ -52,13 +52,13 @@ stories:
 email:
   - 3 subject line options labeled as variations 1, 2, 3.
   - 2 body variations: long-form (~350 words, variation 1) and short (~150 words, variation 2).
-  - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.™"
+  - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.®"
 
 print:
   - 1 headline (8 words max).
   - 1 subhead (15 words max).
   - 1 body block (100 words max).
-  - 1 imagery direction: describe ad layout, background, type treatment, BHHS color use (primary maroon #5A1F2E).
+  - 1 imagery direction: describe ad layout, background, type treatment, BHHS color use (primary Cabernet #670038).
 
 x:
   - 2 post variations. Under 280 characters each. No hashtags. Standalone observations.

@@ -90,10 +90,10 @@ function wrapWords(text: string, maxChars: number): string[] {
 
 function buildTextSvg(text: string, width: number, height: number, platform: string): string {
   const isStories = platform === 'stories';
-  const fontSize = isStories ? 52 : 44;
-  const lineHeight = Math.round(fontSize * 1.35);
-  const hPad = Math.round(width * 0.055);
-  const vPad = Math.round(fontSize * 0.75);
+  const fontSize = isStories ? 34 : 28;
+  const lineHeight = Math.round(fontSize * 1.4);
+  const hPad = Math.round(width * 0.05);
+  const vPad = Math.round(fontSize * 0.7);
 
   // Approximate chars per line using average char width ~0.52× font size
   const charsPerLine = Math.floor((width - hPad * 2) / (fontSize * 0.52));

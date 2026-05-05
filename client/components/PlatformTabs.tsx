@@ -21,8 +21,8 @@ const COPY_TYPES: Record<string, string> = {
   canva_prompt: 'AI Image Prompt',
 };
 
-// Priority order for text overlaid on the generated image
-const OVERLAY_PRIORITY = ['hook', 'headline', 'caption', 'post'];
+// Only short-form types suitable for image overlays (never full captions/posts)
+const OVERLAY_PRIORITY = ['hook', 'headline'];
 
 export default function PlatformTabs({ contentItems, canvaMap }: Props) {
   const [active, setActive] = useState<Platform>('instagram');
