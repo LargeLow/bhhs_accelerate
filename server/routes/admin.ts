@@ -21,7 +21,8 @@ const upload = multer({
   },
 });
 
-// Upload 1–3 PDFs for a single campaign and process with Claude
+// Upload 1–3 PDFs — returns immediately with campaign ID, processes in background.
+// Client polls GET /admin/campaigns to detect when title changes from 'Processing...'
 adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: AuthenticatedRequest, res: Response) => {
   const files = req.files as Express.Multer.File[] | undefined;
   if (!files || files.length === 0) return res.status(400).json({ error: 'At least one PDF file required' });
@@ -40,32 +41,34 @@ adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: Authenticate
     })
     .returning();
 
-  try {
-    const buffers = files.map((f) => f.buffer);
-    const { meta, rows } = await processPdf(campaign.id, buffers);
+  // Respond immediately so the connection doesn't time out
+  res.status(202).json(campaign);
 
-    await db
-      .update(campaigns)
-      .set({ title: meta.title, sourceMonth: meta.sourceMonth, strategyCore: meta.strategyCore, processedAt: new Date() })
-      .where(eq(campaigns.id, campaign.id));
+  // Process in background after response is sent
+  const buffers = files.map((f) => f.buffer);
+  setImmediate(async () => {
+    try {
+      const { meta, rows } = await processPdf(campaign.id, buffers);
 
-    await db.insert(contentItems).values(
-      rows.map((r) => ({
-        campaignId: r.campaignId,
-        platform: r.platform,
-        contentType: r.contentType,
-        variationNumber: r.variationNumber,
-        copyText: r.copyText,
-      }))
-    );
+      await db
+        .update(campaigns)
+        .set({ title: meta.title, sourceMonth: meta.sourceMonth, strategyCore: meta.strategyCore, processedAt: new Date() })
+        .where(eq(campaigns.id, campaign.id));
 
-    const [updated] = await db.select().from(campaigns).where(eq(campaigns.id, campaign.id)).limit(1);
-    return res.status(201).json(updated);
-  } catch (err) {
-    await db.update(campaigns).set({ title: `Processing failed — ${filenames}` }).where(eq(campaigns.id, campaign.id));
-    console.error('Pipeline error:', err);
-    return res.status(500).json({ error: 'PDF processing failed', detail: String(err) });
-  }
+      await db.insert(contentItems).values(
+        rows.map((r) => ({
+          campaignId: r.campaignId,
+          platform: r.platform,
+          contentType: r.contentType,
+          variationNumber: r.variationNumber,
+          copyText: r.copyText,
+        }))
+      );
+    } catch (err) {
+      await db.update(campaigns).set({ title: `Processing failed — ${filenames}` }).where(eq(campaigns.id, campaign.id));
+      console.error('Pipeline error:', err);
+    }
+  });
 });
 
 // List all campaigns including drafts

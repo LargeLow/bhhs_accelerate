@@ -43,16 +43,32 @@ export default function AdminPage() {
       if (!res.ok) {
         const data = await res.json();
         setUploadError(data.error || 'Upload failed');
+        setUploading(false);
         return;
       }
 
       const campaign = await res.json();
-      setUploadSuccess(`Processed: "${campaign.title}" — ready to review and publish.`);
       form.reset();
-      await qc.invalidateQueries({ queryKey: ['admin-campaigns'] });
+
+      // Poll every 4 seconds until Claude finishes processing
+      const poll = setInterval(async () => {
+        await qc.invalidateQueries({ queryKey: ['admin-campaigns'] });
+        const allRes = await fetch('/api/admin/campaigns', { credentials: 'include' });
+        const all = await allRes.json();
+        const updated = all.find((c: { id: string; title: string }) => c.id === campaign.id);
+        if (updated && updated.title !== 'Processing...') {
+          clearInterval(poll);
+          setUploading(false);
+          if (updated.title.startsWith('Processing failed')) {
+            setUploadError(`Processing failed — check Render logs for details.`);
+          } else {
+            setUploadSuccess(`Ready: "${updated.title}" — preview and publish when ready.`);
+          }
+          await qc.invalidateQueries({ queryKey: ['admin-campaigns'] });
+        }
+      }, 4000);
     } catch {
       setUploadError('Network error — please try again');
-    } finally {
       setUploading(false);
     }
   }
@@ -140,7 +156,7 @@ export default function AdminPage() {
 
             {uploading && (
               <p className="mt-3 text-xs text-gray-400">
-                Claude is generating content for all 7 platforms — this takes 30–60 seconds.
+                Claude is reading your PDFs and generating content for all 7 platforms. This takes 60–90 seconds — this page will update automatically when it's done.
               </p>
             )}
           </div>
