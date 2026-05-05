@@ -5,7 +5,15 @@ import { requireAuth, type AuthenticatedRequest } from '../auth';
 export const imagesRouter = Router();
 imagesRouter.use(requireAuth);
 
-const openai = new OpenAI();
+// Lazy — only instantiated on first request so a missing key doesn't crash the server
+let openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY environment variable is not set');
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openai;
+}
 
 const PLATFORM_SIZES: Record<string, '1024x1024' | '1024x1792' | '1792x1024'> = {
   instagram: '1024x1024',
@@ -27,7 +35,7 @@ imagesRouter.post('/generate', async (req: AuthenticatedRequest, res: Response) 
   const size = PLATFORM_SIZES[platform] ?? '1024x1024';
 
   try {
-    const response = await openai.images.generate({
+    const response = await getOpenAI().images.generate({
       model: 'dall-e-3',
       prompt,
       size,
