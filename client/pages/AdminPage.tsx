@@ -50,7 +50,13 @@ export default function AdminPage() {
       const campaign = await res.json();
       form.reset();
 
-      // Poll every 4 seconds until Claude finishes processing
+      // Poll every 4 seconds until Claude finishes — timeout after 3 minutes
+      const timeout = setTimeout(() => {
+        clearInterval(poll);
+        setUploading(false);
+        setUploadError('Processing is taking longer than expected. Check the Drafts list — it may still complete. Refresh the page to check.');
+      }, 3 * 60 * 1000);
+
       const poll = setInterval(async () => {
         await qc.invalidateQueries({ queryKey: ['admin-campaigns'] });
         const allRes = await fetch('/api/admin/campaigns', { credentials: 'include' });
@@ -58,6 +64,7 @@ export default function AdminPage() {
         const updated = all.find((c: { id: string; title: string }) => c.id === campaign.id);
         if (updated && updated.title !== 'Processing...') {
           clearInterval(poll);
+          clearTimeout(timeout);
           setUploading(false);
           if (updated.title.startsWith('Processing failed')) {
             setUploadError(`Processing failed — check Render logs for details.`);
