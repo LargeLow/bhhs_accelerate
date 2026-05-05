@@ -1,22 +1,37 @@
 import Anthropic from '@anthropic-ai/sdk';
-import pdfParse from 'pdf-parse';
-import { SYSTEM_PROMPT, buildUserMessage, parseGeneratedContent } from './claude-prompt';
+import { SYSTEM_PROMPT, parseGeneratedContent } from './claude-prompt';
 import type { GeneratedContent, ContentRow, Platform, ContentType } from '../shared/content-types';
 
 const client = new Anthropic();
 
-export async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
-  const data = await pdfParse(pdfBuffer);
-  if (!data.text?.trim()) throw new Error('PDF appears to be empty or image-only (no extractable text)');
-  return data.text;
-}
+// Pass the PDF directly to Claude — no text extraction needed.
+// Claude natively reads PDFs including those with embedded fonts and complex layouts.
+export async function generateContent(pdfBuffer: Buffer): Promise<GeneratedContent> {
+  const pdfBase64 = pdfBuffer.toString('base64');
 
-export async function generateContent(pdfText: string): Promise<GeneratedContent> {
   const response = await client.messages.create({
     model: 'claude-opus-4-7',
     max_tokens: 8192,
     system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: buildUserMessage(pdfText) }],
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: pdfBase64,
+            },
+          },
+          {
+            type: 'text',
+            text: 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
+          },
+        ],
+      },
+    ],
   });
 
   const textBlock = response.content.find((b) => b.type === 'text');
@@ -63,8 +78,7 @@ export function flattenToRows(campaignId: string, content: GeneratedContent): Co
 }
 
 export async function processPdf(campaignId: string, pdfBuffer: Buffer) {
-  const pdfText = await extractPdfText(pdfBuffer);
-  const content = await generateContent(pdfText);
+  const content = await generateContent(pdfBuffer);
   const rows = flattenToRows(campaignId, content);
   return {
     meta: {
