@@ -16,25 +16,32 @@ export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedCo
     },
   }));
 
-  const response = await client.messages.create({
-    model: 'claude-opus-4-7',
-    max_tokens: 8192,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          ...documentBlocks,
-          {
-            type: 'text',
-            text: pdfBuffers.length > 1
-              ? 'These PDFs form one complete strategy package — the first is the research/survey context, the subsequent file(s) are the topic drop with actionable highlights. Read them together as a single strategy, then produce the full content package as specified in your instructions. Return the JSON object now.'
-              : 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
-          },
-        ],
-      },
-    ],
-  });
+  console.log(`[claude] sending ${pdfBuffers.length} PDF(s) — total size: ${pdfBuffers.reduce((n, b) => n + b.length, 0)} bytes`);
+
+  const response = await client.messages.create(
+    {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 8192,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            ...documentBlocks,
+            {
+              type: 'text',
+              text: pdfBuffers.length > 1
+                ? 'These PDFs form one complete strategy package — the first is the research/survey context, the subsequent file(s) are the topic drop with actionable highlights. Read them together as a single strategy, then produce the full content package as specified in your instructions. Return the JSON object now.'
+                : 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
+            },
+          ],
+        },
+      ],
+    },
+    { timeout: 180_000 } // 3-minute hard timeout
+  );
+
+  console.log(`[claude] response received — stop_reason: ${response.stop_reason}`);
 
   const textBlock = response.content.find((b) => b.type === 'text');
   if (!textBlock || textBlock.type !== 'text') {
