@@ -4,10 +4,17 @@ import type { GeneratedContent, ContentRow, Platform, ContentType } from '../sha
 
 const client = new Anthropic();
 
-// Pass the PDF directly to Claude — no text extraction needed.
-// Claude natively reads PDFs including those with embedded fonts and complex layouts.
-export async function generateContent(pdfBuffer: Buffer): Promise<GeneratedContent> {
-  const pdfBase64 = pdfBuffer.toString('base64');
+// Accept 1–3 PDF buffers and send them all to Claude in a single call.
+// Multiple documents give Claude full context — research PDF + topic drop together.
+export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedContent> {
+  const documentBlocks = pdfBuffers.map((buf) => ({
+    type: 'document' as const,
+    source: {
+      type: 'base64' as const,
+      media_type: 'application/pdf' as const,
+      data: buf.toString('base64'),
+    },
+  }));
 
   const response = await client.messages.create({
     model: 'claude-opus-4-7',
@@ -17,17 +24,12 @@ export async function generateContent(pdfBuffer: Buffer): Promise<GeneratedConte
       {
         role: 'user',
         content: [
-          {
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: 'application/pdf',
-              data: pdfBase64,
-            },
-          },
+          ...documentBlocks,
           {
             type: 'text',
-            text: 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
+            text: pdfBuffers.length > 1
+              ? 'These PDFs form one complete strategy package — the first is the research/survey context, the subsequent file(s) are the topic drop with actionable highlights. Read them together as a single strategy, then produce the full content package as specified in your instructions. Return the JSON object now.'
+              : 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
           },
         ],
       },
@@ -77,8 +79,8 @@ export function flattenToRows(campaignId: string, content: GeneratedContent): Co
   return rows;
 }
 
-export async function processPdf(campaignId: string, pdfBuffer: Buffer) {
-  const content = await generateContent(pdfBuffer);
+export async function processPdf(campaignId: string, pdfBuffers: Buffer[]) {
+  const content = await generateContent(pdfBuffers);
   const rows = flattenToRows(campaignId, content);
   return {
     meta: {

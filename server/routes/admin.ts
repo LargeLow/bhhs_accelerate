@@ -11,7 +11,7 @@ adminRouter.use(requireAdmin);
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
+  limits: { fileSize: 20 * 1024 * 1024, files: 3 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype !== 'application/pdf') {
       cb(new Error('Only PDF files are accepted'));
@@ -21,27 +21,28 @@ const upload = multer({
   },
 });
 
-// Upload a PDF and process it with Claude
-adminRouter.post('/campaigns', upload.single('pdf'), async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.file) return res.status(400).json({ error: 'PDF file required' });
+// Upload 1–3 PDFs for a single campaign and process with Claude
+adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: AuthenticatedRequest, res: Response) => {
+  const files = req.files as Express.Multer.File[] | undefined;
+  if (!files || files.length === 0) return res.status(400).json({ error: 'At least one PDF file required' });
 
-  const pdfBase64 = req.file.buffer.toString('base64');
+  const filenames = files.map((f) => f.originalname).join(' + ');
+  const primaryPdf = files[0];
 
-  // Create campaign row in draft state
   const [campaign] = await db
     .insert(campaigns)
     .values({
       title: 'Processing...',
       sourceMonth: 'Processing...',
-      pdfFilename: req.file.originalname,
-      pdfData: pdfBase64,
+      pdfFilename: filenames,
+      pdfData: primaryPdf.buffer.toString('base64'),
       status: 'draft',
     })
     .returning();
 
-  // Run pipeline — this takes 15–30 seconds (Claude call)
   try {
-    const { meta, rows } = await processPdf(campaign.id, req.file.buffer);
+    const buffers = files.map((f) => f.buffer);
+    const { meta, rows } = await processPdf(campaign.id, buffers);
 
     await db
       .update(campaigns)
@@ -61,8 +62,7 @@ adminRouter.post('/campaigns', upload.single('pdf'), async (req: AuthenticatedRe
     const [updated] = await db.select().from(campaigns).where(eq(campaigns.id, campaign.id)).limit(1);
     return res.status(201).json(updated);
   } catch (err) {
-    // Mark the campaign so admin knows processing failed
-    await db.update(campaigns).set({ title: `Processing failed — ${req.file.originalname}` }).where(eq(campaigns.id, campaign.id));
+    await db.update(campaigns).set({ title: `Processing failed — ${filenames}` }).where(eq(campaigns.id, campaign.id));
     console.error('Pipeline error:', err);
     return res.status(500).json({ error: 'PDF processing failed', detail: String(err) });
   }

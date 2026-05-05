@@ -19,15 +19,17 @@ export default function AdminPage() {
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const file = (form.elements.namedItem('pdf') as HTMLInputElement).files?.[0];
-    if (!file) return;
+    const files = (form.elements.namedItem('pdfs') as HTMLInputElement).files;
+    if (!files || files.length === 0) return;
 
     setUploading(true);
     setUploadError('');
     setUploadSuccess('');
 
     const formData = new FormData();
-    formData.append('pdf', file);
+    for (const file of Array.from(files)) {
+      formData.append('pdfs', file);
+    }
 
     try {
       const res = await fetch('/api/admin/campaigns', {
@@ -84,11 +86,15 @@ export default function AdminPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <form onSubmit={handleUpload} className="flex items-end gap-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">1000WATT PDF</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  1000WATT PDFs
+                  <span className="ml-2 text-xs text-gray-400 font-normal">Select 1–3 files (hold ⌘ to select multiple)</span>
+                </label>
                 <input
                   type="file"
-                  name="pdf"
+                  name="pdfs"
                   accept="application/pdf"
+                  multiple
                   required
                   className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-bhhs-maroon file:text-white hover:file:bg-bhhs-dark file:cursor-pointer"
                 />
