@@ -7,6 +7,7 @@ import { loadSession } from './auth';
 import { authRouter } from './routes/auth';
 import { campaignsRouter } from './routes/campaigns';
 import { adminRouter } from './routes/admin';
+import { imagesRouter } from './routes/images';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,7 @@ app.use(loadSession);
 app.use('/api/auth', authRouter);
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/images', imagesRouter);
 
 // Serve Vite build in production
 if (isProd) {

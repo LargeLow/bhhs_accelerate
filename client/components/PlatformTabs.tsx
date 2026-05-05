@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PLATFORMS, PLATFORM_LABELS, type Platform, type ContentItemRecord } from '../../shared/content-types';
 import CopyBlock from './CopyBlock';
+import ImageGenerator from './ImageGenerator';
 
 interface Props {
   contentItems: ContentItemRecord[];
@@ -91,6 +92,9 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
                   {COPY_TYPES[item.contentType] ?? item.contentType}
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.copyText}</p>
+                {item.contentType === 'canva_prompt' && (
+                  <ImageGenerator platform={active} prompt={item.copyText} />
+                )}
               </div>
             ))}
           </div>
