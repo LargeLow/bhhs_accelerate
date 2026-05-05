@@ -5,14 +5,15 @@ module.exports = {
     extend: {
       colors: {
         bhhs: {
-          maroon: '#5A1F2E',
-          dark: '#3d1520',
-          light: '#7a2f42',
-          cream: '#F5F0EB',
+          maroon: '#670038',
+          dark: '#4a0028',
+          light: '#8a0050',
+          cream: '#F5F1F2',
         },
       },
       fontFamily: {
-        serif: ['Georgia', 'serif'],
+        serif: ['Marcellus', 'Georgia', 'serif'],
+        sans: ['Manrope', 'system-ui', 'sans-serif'],
       },
     },
   },

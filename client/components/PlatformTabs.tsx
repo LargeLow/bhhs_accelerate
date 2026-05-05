@@ -21,16 +21,29 @@ const COPY_TYPES: Record<string, string> = {
   canva_prompt: 'AI Image Prompt',
 };
 
+// Priority order for text overlaid on the generated image
+const OVERLAY_PRIORITY = ['hook', 'headline', 'caption', 'post'];
+
 export default function PlatformTabs({ contentItems, canvaMap }: Props) {
   const [active, setActive] = useState<Platform>('instagram');
 
   const itemsForPlatform = contentItems.filter((i) => i.platform === active);
   const canvaTemplate = canvaMap[active];
 
-  // Group into copy items and supporting items
   const supportingTypes = ['imagery_direction', 'canva_prompt'];
   const copyItems = itemsForPlatform.filter((i) => !supportingTypes.includes(i.contentType));
   const supportItems = itemsForPlatform.filter((i) => supportingTypes.includes(i.contentType));
+
+  // Best single text for overlay (first variation only)
+  const overlayItem = OVERLAY_PRIORITY
+    .map((t) => itemsForPlatform.find((i) => i.contentType === t))
+    .find(Boolean);
+  const overlayText = overlayItem?.copyText;
+
+  // For Stories: all hook variations for the slide pack ZIP
+  const hookTexts = active === 'stories'
+    ? itemsForPlatform.filter((i) => i.contentType === 'hook').map((i) => i.copyText)
+    : undefined;
 
   return (
     <div>
@@ -92,8 +105,13 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
                   {COPY_TYPES[item.contentType] ?? item.contentType}
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.copyText}</p>
-                {item.contentType === 'canva_prompt' && (
-                  <ImageGenerator platform={active} prompt={item.copyText} />
+                {(item.contentType === 'canva_prompt' || item.contentType === 'imagery_direction') && (
+                  <ImageGenerator
+                    platform={active}
+                    prompt={item.copyText}
+                    overlayText={overlayText}
+                    overlayTexts={hookTexts}
+                  />
                 )}
               </div>
             ))}
