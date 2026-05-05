@@ -44,7 +44,10 @@ campaignsRouter.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: 
     .limit(1);
 
   if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
-  if (campaign.status !== 'published') return res.status(404).json({ error: 'Campaign not found' });
+  // Admins can preview drafts; agents only see published content
+  if (campaign.status !== 'published' && req.user?.role !== 'admin') {
+    return res.status(404).json({ error: 'Campaign not found' });
+  }
 
   const items = await db
     .select({
