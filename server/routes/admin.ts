@@ -47,8 +47,10 @@ adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: Authenticate
   // Process in background after response is sent
   const buffers = files.map((f) => f.buffer);
   setImmediate(async () => {
+    console.log(`[pipeline] starting for campaign ${campaign.id} — ${filenames}`);
     try {
       const { meta, rows } = await processPdf(campaign.id, buffers);
+      console.log(`[pipeline] Claude finished — title: ${meta.title}`);
 
       await db
         .update(campaigns)
@@ -64,9 +66,10 @@ adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: Authenticate
           copyText: r.copyText,
         }))
       );
+      console.log(`[pipeline] saved ${rows.length} content items`);
     } catch (err) {
+      console.error('[pipeline] error:', err);
       await db.update(campaigns).set({ title: `Processing failed — ${filenames}` }).where(eq(campaigns.id, campaign.id));
-      console.error('Pipeline error:', err);
     }
   });
 });
