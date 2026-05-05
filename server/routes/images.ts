@@ -9,8 +9,9 @@ imagesRouter.use(requireAuth);
 let openai: OpenAI | null = null;
 function getOpenAI(): OpenAI {
   if (!openai) {
-    if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY environment variable is not set');
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const key = process.env.OPENAI_API_KEY?.trim();
+    if (!key) throw new Error('OPENAI_API_KEY environment variable is not set');
+    openai = new OpenAI({ apiKey: key });
   }
   return openai;
 }
