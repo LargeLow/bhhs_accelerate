@@ -21,8 +21,21 @@ const COPY_TYPES: Record<string, string> = {
   canva_prompt: 'AI Image Prompt',
 };
 
-// Only short-form types suitable for image overlays (never full captions/posts)
-const OVERLAY_PRIORITY = ['hook', 'headline'];
+// Priority for image overlay text — long types are truncated to first 1-2 sentences
+const OVERLAY_PRIORITY = ['hook', 'headline', 'caption', 'post'];
+
+function truncateForOverlay(text: string, maxLen = 130): string {
+  if (text.length <= maxLen) return text;
+  // Cut at sentence boundary within limit
+  const sentences = text.split(/(?<=\.)\s+/);
+  let result = '';
+  for (const s of sentences) {
+    if ((result + (result ? ' ' : '') + s).length <= maxLen) {
+      result = result ? `${result} ${s}` : s;
+    } else break;
+  }
+  return result.trim() || text.slice(0, maxLen).trimEnd();
+}
 
 export default function PlatformTabs({ contentItems, canvaMap }: Props) {
   const [active, setActive] = useState<Platform>('instagram');
@@ -34,11 +47,11 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
   const copyItems = itemsForPlatform.filter((i) => !supportingTypes.includes(i.contentType));
   const supportItems = itemsForPlatform.filter((i) => supportingTypes.includes(i.contentType));
 
-  // Best single text for overlay (first variation only)
+  // Best single text for overlay (first variation only, truncated to 1-2 sentences)
   const overlayItem = OVERLAY_PRIORITY
     .map((t) => itemsForPlatform.find((i) => i.contentType === t))
     .find(Boolean);
-  const overlayText = overlayItem?.copyText;
+  const overlayText = overlayItem ? truncateForOverlay(overlayItem.copyText) : undefined;
 
   // For Stories: all hook variations for the slide pack ZIP
   const hookTexts = active === 'stories'
@@ -105,7 +118,7 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
                   {COPY_TYPES[item.contentType] ?? item.contentType}
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.copyText}</p>
-                {(item.contentType === 'canva_prompt' || item.contentType === 'imagery_direction') && (
+                {item.contentType === 'canva_prompt' && (
                   <ImageGenerator
                     platform={active}
                     prompt={item.copyText}
