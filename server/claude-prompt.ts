@@ -25,21 +25,21 @@ Produce content for Instagram, Facebook, and Stories/Reels only.
 STRICT word limits — do not exceed them.
 
 instagram:
-  - 3 caption variations. Tones: punchy / stat-led / conversational. Max 120 words each.
+  - 3 caption variations. Tones: punchy / stat-led / conversational. Max 250 words each.
   - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.®"
   - 1 hashtag block: 10 hashtags (Utah-specific + topic-specific).
   - 1 imageryDirection: 2 sentences max on angle, mood, subjects.
-  - 1 canvaPrompt: 2 sentences, visual scene only, photorealistic DALL-E style.
+  - 1 canvaPrompt: 2-3 sentences, visual scene only, photorealistic DALL-E style.
 
 facebook:
-  - 2 post variations. Educational (150 words max). Ad-friendly (75 words max).
+  - 2 post variations. Educational (300 words max). Ad-friendly (125 words max).
   - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.® → [Agent URL]"
-  - 1 imageryDirection: 1 sentence.
+  - 1 imageryDirection: 1-2 sentences.
 
 stories:
   - 5 hook lines — opening frame of a Story, 1-2 sentences each.
-  - 1 imageryDirection: 1 sentence on visual style.
-  - 1 canvaPrompt: 2 sentences, visual scene only, photorealistic DALL-E style.
+  - 1 imageryDirection: 1-2 sentences on visual style.
+  - 1 canvaPrompt: 2-3 sentences, visual scene only, photorealistic DALL-E style.
 
 JSON schema (return this exact shape):
 {
@@ -73,20 +73,20 @@ Produce content for LinkedIn, Email, Print, and X/Twitter only.
 STRICT word limits — do not exceed them.
 
 linkedin:
-  - 1 post, 150-200 words. Opens with an observation, not a question.
+  - 1 post, 250-275 words. Opens with an observation, not a question.
   - Ends with [Agent Name], brokerage name, [Agent Phone]. No tagline.
-  - 1 imageryDirection: 1 sentence.
+  - 1 imageryDirection: 1-2 sentences.
 
 email:
   - 3 subject line variations.
-  - 2 body variations: long (150 words max) and short (75 words max).
+  - 2 body variations: long (275 words max) and short (125 words max).
   - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.®"
 
 print:
   - 1 headline (8 words max).
   - 1 subhead (15 words max).
-  - 1 body (60 words max).
-  - 1 imageryDirection: 1 sentence on layout and BHHS Cabernet #670038.
+  - 1 body (75 words max).
+  - 1 imageryDirection: 1-2 sentences on layout and BHHS Cabernet #670038.
 
 x:
   - 2 post variations. Under 280 characters each. No hashtags.

@@ -24,7 +24,7 @@ const COPY_TYPES: Record<string, string> = {
 // Priority for image overlay text — long types are truncated to first 1-2 sentences
 const OVERLAY_PRIORITY = ['hook', 'headline', 'caption', 'post'];
 
-function truncateForOverlay(text: string, maxLen = 130): string {
+function truncateForOverlay(text: string, maxLen = 200): string {
   if (text.length <= maxLen) return text;
   // Cut at sentence boundary within limit
   const sentences = text.split(/(?<=\.)\s+/);
