@@ -40,9 +40,13 @@ facebook:
   - 1 imageryDirection: 1-2 sentences.
 
 stories:
-  - 5 hook lines — opening frame of a Story, 1-2 sentences each.
-  - Hooks must be self-contained and ready to post — do NOT use any substitution slots
-    ([Agent Name], [City/Area], [Agent Phone], [Agent URL]). Generic Utah context only.
+  - 5 hook lines — opening frame of a Story or Reel, displayed as text on a static image.
+  - Each hook is a COMPLETE, self-contained thought — two sentences maximum.
+  - Structure: first sentence states an observation or tension. Second sentence lands the insight or implication.
+  - Do NOT end with "Here is..." or "This is why..." or any construction that promises
+    follow-up content. The hook must resolve itself — no open loops.
+  - Each variation takes a different angle: statistic, contrast, direct observation, reframe, challenge.
+  - Do NOT use any substitution slots ([Agent Name], [City/Area], etc.). Generic Utah context only.
   - 1 imageryDirection: 1-2 sentences on visual style.
   - 1 canvaPrompt: 2-3 sentences, visual scene only, photorealistic DALL-E style.
 

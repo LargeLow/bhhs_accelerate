@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../db';
-import { campaigns, contentItems, campaignImages } from '../schema';
+import { campaigns, contentItems, campaignImages, users } from '../schema';
+import bcrypt from 'bcrypt';
 import { compositeImage } from '../composite';
 import type { Platform } from '../../shared/content-types';
 import { eq, desc } from 'drizzle-orm';
@@ -184,5 +185,61 @@ adminRouter.post(
 adminRouter.delete('/campaigns/:id/images/:imageId', async (req: AuthenticatedRequest, res: Response) => {
   const { imageId } = req.params;
   await db.delete(campaignImages).where(eq(campaignImages.id, imageId));
+  return res.json({ ok: true });
+});
+
+// ─── User management ─────────────────────────────────────────────────────────
+
+adminRouter.get('/users', async (_req: AuthenticatedRequest, res: Response) => {
+  const rows = await db
+    .select({ id: users.id, email: users.email, name: users.name, role: users.role, createdAt: users.createdAt })
+    .from(users)
+    .orderBy(users.createdAt);
+  return res.json(rows);
+});
+
+adminRouter.post('/users', async (req: AuthenticatedRequest, res: Response) => {
+  const { email, name, password, role } = req.body as {
+    email?: string; name?: string; password?: string; role?: string;
+  };
+  if (!email || !name || !password) {
+    return res.status(400).json({ error: 'email, name, and password are required' });
+  }
+  const validRole = role === 'admin' ? 'admin' : 'agent';
+  const passwordHash = await bcrypt.hash(password, 10);
+  try {
+    const [user] = await db
+      .insert(users)
+      .values({ email: email.toLowerCase().trim(), name, passwordHash, role: validRole })
+      .returning({ id: users.id, email: users.email, name: users.name, role: users.role, createdAt: users.createdAt });
+    return res.status(201).json(user);
+  } catch (err: unknown) {
+    const msg = String(err);
+    if (msg.includes('unique') || msg.includes('duplicate')) {
+      return res.status(409).json({ error: 'An account with that email already exists' });
+    }
+    return res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+adminRouter.patch('/users/:id/password', async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { password } = req.body as { password?: string };
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const [updated] = await db.update(users).set({ passwordHash }).where(eq(users.id, id)).returning({ id: users.id });
+  if (!updated) return res.status(404).json({ error: 'User not found' });
+  return res.json({ ok: true });
+});
+
+adminRouter.delete('/users/:id', async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  // Prevent self-deletion
+  if (id === req.user?.id) {
+    return res.status(400).json({ error: 'You cannot delete your own account' });
+  }
+  await db.delete(users).where(eq(users.id, id));
   return res.json({ ok: true });
 });

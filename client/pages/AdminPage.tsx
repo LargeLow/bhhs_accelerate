@@ -3,18 +3,88 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import type { CampaignSummary } from '../../shared/content-types';
 
+interface UserRecord {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'agent';
+  createdAt: string;
+}
+
 async function fetchAllCampaigns(): Promise<(CampaignSummary & { pdfFilename: string; processedAt: string | null })[]> {
   const res = await fetch('/api/admin/campaigns', { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to load');
   return res.json();
 }
 
+async function fetchUsers(): Promise<UserRecord[]> {
+  const res = await fetch('/api/admin/users', { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to load users');
+  return res.json();
+}
+
 export default function AdminPage() {
   const qc = useQueryClient();
   const { data: campaigns = [], isLoading } = useQuery({ queryKey: ['admin-campaigns'], queryFn: fetchAllCampaigns });
+  const { data: userList = [] } = useQuery({ queryKey: ['admin-users'], queryFn: fetchUsers });
+
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
+
+  // User form state
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<'agent' | 'admin'>('agent');
+  const [userError, setUserError] = useState('');
+  const [userSuccess, setUserSuccess] = useState('');
+  const [savingUser, setSavingUser] = useState(false);
+
+  // Reset-password state keyed by user id
+  const [resetTargetId, setResetTargetId] = useState<string | null>(null);
+  const [resetPw, setResetPw] = useState('');
+  const [resetError, setResetError] = useState('');
+
+  async function handleAddUser(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingUser(true);
+    setUserError('');
+    setUserSuccess('');
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newEmail, name: newName, password: newPassword, role: newRole }),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) { setUserError(data.error || 'Failed to create user'); }
+    else {
+      setUserSuccess(`${data.name} added successfully.`);
+      setNewName(''); setNewEmail(''); setNewPassword(''); setNewRole('agent');
+      await qc.invalidateQueries({ queryKey: ['admin-users'] });
+    }
+    setSavingUser(false);
+  }
+
+  async function handleDeleteUser(id: string, name: string) {
+    if (!confirm(`Remove ${name}? They will no longer be able to log in.`)) return;
+    await fetch(`/api/admin/users/${id}`, { method: 'DELETE', credentials: 'include' });
+    await qc.invalidateQueries({ queryKey: ['admin-users'] });
+  }
+
+  async function handleResetPassword(id: string) {
+    setResetError('');
+    if (resetPw.length < 6) { setResetError('Password must be at least 6 characters'); return; }
+    const res = await fetch(`/api/admin/users/${id}/password`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: resetPw }),
+      credentials: 'include',
+    });
+    if (res.ok) { setResetTargetId(null); setResetPw(''); setResetError(''); }
+    else { const d = await res.json(); setResetError(d.error || 'Failed'); }
+  }
 
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -226,6 +296,112 @@ export default function AdminPage() {
         )}
 
         {isLoading && <p className="text-gray-400 text-sm">Loading…</p>}
+
+        {/* Team / User Management */}
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-4">Team</h2>
+
+          {/* Add user form */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-4">Add Agent or Admin</h3>
+            <form onSubmit={handleAddUser} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Full Name</label>
+                  <input
+                    required value={newName} onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Jane Smith"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-bhhs-maroon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Email (login username)</label>
+                  <input
+                    required type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-bhhs-maroon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Password</label>
+                  <input
+                    required type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-bhhs-maroon"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Role</label>
+                  <select
+                    value={newRole} onChange={(e) => setNewRole(e.target.value as 'agent' | 'admin')}
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-bhhs-maroon"
+                  >
+                    <option value="agent">Agent</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" disabled={savingUser} className="btn-primary text-sm disabled:opacity-60">
+                {savingUser ? 'Adding…' : 'Add User'}
+              </button>
+              {userError && <p className="text-sm text-red-600">{userError}</p>}
+              {userSuccess && <p className="text-sm text-green-700">{userSuccess}</p>}
+            </form>
+          </div>
+
+          {/* User list */}
+          {userList.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Role</th>
+                    <th className="px-4 py-2.5" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {userList.map((u) => (
+                    <tr key={u.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
+                      <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.role === 'admin' ? 'bg-bhhs-maroon/10 text-bhhs-maroon' : 'bg-gray-100 text-gray-600'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3 justify-end">
+                          {resetTargetId === u.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="password" value={resetPw} onChange={(e) => setResetPw(e.target.value)}
+                                placeholder="New password"
+                                className="border border-gray-200 rounded px-2 py-1 text-xs w-36 focus:outline-none focus:border-bhhs-maroon"
+                              />
+                              <button onClick={() => handleResetPassword(u.id)} className="text-xs text-bhhs-maroon font-medium hover:text-bhhs-dark">Save</button>
+                              <button onClick={() => { setResetTargetId(null); setResetPw(''); setResetError(''); }} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+                              {resetError && <span className="text-xs text-red-600">{resetError}</span>}
+                            </div>
+                          ) : (
+                            <button onClick={() => { setResetTargetId(u.id); setResetPw(''); }} className="text-xs text-gray-400 hover:text-bhhs-maroon">
+                              Reset password
+                            </button>
+                          )}
+                          <button onClick={() => handleDeleteUser(u.id, u.name)} className="text-xs text-gray-400 hover:text-red-500">
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
       </main>
     </div>
   );
