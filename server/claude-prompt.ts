@@ -14,7 +14,10 @@ BRAND VOICE
 SUBSTITUTION SLOTS (use these exact placeholders when agent info is needed)
   [Agent Name]  [Agent Phone]  [Agent URL]  [City/Area]
 
-Return raw JSON only. No markdown, no code fences.
+OUTPUT RULES
+- Return raw JSON only. No markdown, no code fences, no preamble.
+- Use \\n for paragraph breaks inside JSON string values — never literal newlines.
+- Do not use smart quotes or em-dashes that are not ASCII-safe.
 `.trim();
 
 // ─── Call A: visual/social platforms ────────────────────────────────────────
@@ -125,11 +128,29 @@ type PartialB = {
 };
 
 function parseJson<T>(raw: string, label: string): T {
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+  // Strip code fences and any preamble before the first {
+  let cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+  const jsonStart = cleaned.indexOf('{');
+  if (jsonStart > 0) cleaned = cleaned.slice(jsonStart);
+  const jsonEnd = cleaned.lastIndexOf('}');
+  if (jsonEnd !== -1 && jsonEnd < cleaned.length - 1) cleaned = cleaned.slice(0, jsonEnd + 1);
+
   try {
     return JSON.parse(cleaned) as T;
-  } catch {
-    throw new Error(`Claude ${label} returned invalid JSON. First 400 chars: ${cleaned.slice(0, 400)}`);
+  } catch (firstErr) {
+    // Claude sometimes writes literal newlines inside JSON strings — replace them
+    const repaired = cleaned.replace(/("(?:[^"\\]|\\.)*")/gs, (match) =>
+      match.replace(/\n/g, '\\n').replace(/\r/g, ''),
+    );
+    try {
+      return JSON.parse(repaired) as T;
+    } catch {
+      const preview = cleaned.slice(0, 600);
+      const tail = cleaned.slice(-200);
+      throw new Error(
+        `Claude ${label} invalid JSON (${firstErr})\nFirst 600: ${preview}\nLast 200: ${tail}`,
+      );
+    }
   }
 }
 
