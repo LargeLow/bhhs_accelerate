@@ -85,8 +85,16 @@ export interface ContentItemRecord {
   copyText: string;
 }
 
+export interface CampaignImageRecord {
+  id: string;
+  platform: Platform;
+  filename: string;
+  imageData: string; // base64 PNG
+}
+
 export interface CampaignDetail extends CampaignSummary {
   contentItems: ContentItemRecord[];
+  campaignImages: CampaignImageRecord[];
 }
 
 export interface CanvaTemplate {

@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { PLATFORMS, PLATFORM_LABELS, type Platform, type ContentItemRecord } from '../../shared/content-types';
+import { PLATFORMS, PLATFORM_LABELS, type Platform, type ContentItemRecord, type CampaignImageRecord } from '../../shared/content-types';
 import CopyBlock from './CopyBlock';
 import ImageGenerator from './ImageGenerator';
+import AdminImageUpload from './AdminImageUpload';
 
 interface Props {
   contentItems: ContentItemRecord[];
   canvaMap: Record<string, { name: string; url: string }>;
+  campaignId: string;
+  isAdmin: boolean;
+  initialImages: CampaignImageRecord[];
 }
 
 const COPY_TYPES: Record<string, string> = {
@@ -41,8 +45,11 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function PlatformTabs({ contentItems, canvaMap }: Props) {
+export default function PlatformTabs({ contentItems, canvaMap, campaignId, isAdmin, initialImages }: Props) {
   const [active, setActive] = useState<Platform>('instagram');
+  const [adminImages, setAdminImages] = useState<CampaignImageRecord[]>(initialImages);
+
+  const adminImage = adminImages.find((img) => img.platform === active);
 
   const itemsForPlatform = contentItems.filter((i) => i.platform === active);
   const canvaTemplate = canvaMap[active];
@@ -132,6 +139,16 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
                     prompt={item.copyText}
                     overlayText={storiesOverlayText}
                     overlayTexts={hookTexts}
+                    adminImage={adminImage}
+                  />
+                )}
+                {item.contentType === 'canva_prompt' && isAdmin && (
+                  <AdminImageUpload
+                    campaignId={campaignId}
+                    platform={active}
+                    existing={adminImage}
+                    onUploaded={(img) => setAdminImages((prev) => [...prev.filter((i) => i.platform !== active), img])}
+                    onDeleted={() => setAdminImages((prev) => prev.filter((i) => i.platform !== active))}
                   />
                 )}
               </div>

@@ -1,7 +1,9 @@
 import { Router, Response } from 'express';
 import multer from 'multer';
 import { db } from '../db';
-import { campaigns, contentItems } from '../schema';
+import { campaigns, contentItems, campaignImages } from '../schema';
+import { compositeImage } from '../composite';
+import type { Platform } from '../../shared/content-types';
 import { eq, desc } from 'drizzle-orm';
 import { processPdf } from '../pipeline';
 import { requireAdmin, type AuthenticatedRequest } from '../auth';
@@ -110,4 +112,77 @@ adminRouter.patch('/campaigns/:id', async (req: AuthenticatedRequest, res: Respo
   if (!updated) return res.status(404).json({ error: 'Campaign not found' });
 
   return res.json(updated);
+});
+
+// Image upload multer — accepts jpeg/png up to 10MB
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(new Error('Only JPEG, PNG, or WebP images are accepted'));
+    } else {
+      cb(null, true);
+    }
+  },
+});
+
+const PLATFORM_SIZES: Record<string, { w: number; h: number }> = {
+  instagram: { w: 1024, h: 1024 },
+  stories:   { w: 1024, h: 1792 },
+  facebook:  { w: 1792, h: 1024 },
+  linkedin:  { w: 1792, h: 1024 },
+  print:     { w: 1792, h: 1024 },
+  x:         { w: 1792, h: 1024 },
+  email:     { w: 1024, h: 1024 },
+};
+
+// Upload a marketing-team image for a specific campaign + platform
+adminRouter.post(
+  '/campaigns/:id/images',
+  imageUpload.single('image'),
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const { platform } = req.body as { platform?: string };
+
+    if (!req.file) return res.status(400).json({ error: 'No image file provided' });
+    if (!platform || !PLATFORM_SIZES[platform]) {
+      return res.status(400).json({ error: 'Valid platform required' });
+    }
+
+    try {
+      // Convert to base64, resize to platform dimensions, composite logo
+      const sharp = (await import('sharp')).default;
+      const { w, h } = PLATFORM_SIZES[platform];
+      const resized = await sharp(req.file.buffer).resize(w, h, { fit: 'cover' }).png().toBuffer();
+      const composited = await compositeImage(resized.toString('base64'), w, h, { platform });
+
+      // Replace any existing image for this campaign+platform
+      await db
+        .delete(campaignImages)
+        .where(eq(campaignImages.campaignId, id));
+
+      const [row] = await db
+        .insert(campaignImages)
+        .values({
+          campaignId: id,
+          platform: platform as Platform,
+          imageData: composited,
+          filename: req.file.originalname,
+        })
+        .returning();
+
+      return res.json({ id: row.id, platform: row.platform, filename: row.filename });
+    } catch (err) {
+      console.error('[admin] image upload error:', err);
+      return res.status(500).json({ error: 'Image processing failed', detail: String(err) });
+    }
+  },
+);
+
+// Delete a campaign image
+adminRouter.delete('/campaigns/:id/images/:imageId', async (req: AuthenticatedRequest, res: Response) => {
+  const { imageId } = req.params;
+  await db.delete(campaignImages).where(eq(campaignImages.id, imageId));
+  return res.json({ ok: true });
 });

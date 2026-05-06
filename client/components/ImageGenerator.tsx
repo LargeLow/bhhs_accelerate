@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import type { Platform } from '../../shared/content-types';
+import type { Platform, CampaignImageRecord } from '../../shared/content-types';
 
 interface Props {
   platform: Platform;
   prompt: string;
-  overlayText?: string;   // text to composite onto the image
-  overlayTexts?: string[]; // for Stories: multiple hook variations → ZIP
+  overlayText?: string;
+  overlayTexts?: string[];
+  adminImage?: CampaignImageRecord; // marketing-team override image
 }
 
-export default function ImageGenerator({ platform, prompt, overlayText, overlayTexts }: Props) {
+export default function ImageGenerator({ platform, prompt, overlayText, overlayTexts, adminImage }: Props) {
   const [loading, setLoading] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -91,8 +92,34 @@ export default function ImageGenerator({ platform, prompt, overlayText, overlayT
 
   const slideLabel = overlayTexts ? `${overlayTexts.length} slide${overlayTexts.length !== 1 ? 's' : ''}` : '';
 
+  function downloadAdminImage() {
+    if (!adminImage) return;
+    const link = document.createElement('a');
+    link.href = `data:image/png;base64,${adminImage.imageData}`;
+    link.download = `bhhs-${platform}-image.png`;
+    link.click();
+  }
+
   return (
     <div className="mt-3 space-y-3">
+      {/* Admin-approved image — shown as primary option */}
+      {adminImage && (
+        <div className="space-y-2">
+          <img
+            src={`data:image/png;base64,${adminImage.imageData}`}
+            alt="Team-approved visual"
+            className="w-full rounded-lg border border-gray-200"
+          />
+          <button
+            onClick={downloadAdminImage}
+            className="w-full bg-bhhs-maroon text-white text-xs py-2 rounded hover:bg-bhhs-dark transition-colors"
+          >
+            Download PNG
+          </button>
+          <p className="text-xs text-gray-400 text-center">— or generate an AI alternative below —</p>
+        </div>
+      )}
+
       {!imageData && (
         <>
           <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer select-none">

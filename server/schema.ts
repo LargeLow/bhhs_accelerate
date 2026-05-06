@@ -47,6 +47,15 @@ export const users = pgTable('users', {
   createdAt:    timestamp('created_at').defaultNow().notNull(),
 });
 
+export const campaignImages = pgTable('campaign_images', {
+  id:         uuid('id').defaultRandom().primaryKey(),
+  campaignId: uuid('campaign_id').references(() => campaigns.id, { onDelete: 'cascade' }).notNull(),
+  platform:   platformEnum('platform').notNull(),
+  imageData:  text('image_data').notNull(), // base64 PNG (logo already composited)
+  filename:   text('filename').notNull(),
+  createdAt:  timestamp('created_at').defaultNow().notNull(),
+});
+
 export const sessions = pgTable('sessions', {
   id:        text('id').primaryKey(),
   userId:    uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),

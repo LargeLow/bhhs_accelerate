@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { db } from '../db';
-import { campaigns, contentItems, canvaTemplates } from '../schema';
+import { campaigns, contentItems, canvaTemplates, campaignImages } from '../schema';
 import { eq, desc } from 'drizzle-orm';
 import { requireAuth, type AuthenticatedRequest } from '../auth';
 
@@ -64,5 +64,15 @@ campaignsRouter.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: 
 
   const templates = await db.select().from(canvaTemplates);
 
-  return res.json({ ...campaign, contentItems: items, canvaTemplates: templates });
+  const images = await db
+    .select({
+      id: campaignImages.id,
+      platform: campaignImages.platform,
+      filename: campaignImages.filename,
+      imageData: campaignImages.imageData,
+    })
+    .from(campaignImages)
+    .where(eq(campaignImages.campaignId, id));
+
+  return res.json({ ...campaign, contentItems: items, canvaTemplates: templates, campaignImages: images });
 });

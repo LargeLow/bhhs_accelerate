@@ -68,6 +68,9 @@ export default function CampaignPage({ user }: Props) {
         <PlatformTabs
           contentItems={campaign.contentItems}
           canvaMap={canvaMap}
+          campaignId={campaign.id}
+          isAdmin={user.role === 'admin'}
+          initialImages={campaign.campaignImages ?? []}
         />
       </main>
     </div>
