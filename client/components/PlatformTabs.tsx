@@ -21,20 +21,24 @@ const COPY_TYPES: Record<string, string> = {
   canva_prompt: 'AI Image Prompt',
 };
 
-// Priority for image overlay text — long types are truncated to first 1-2 sentences
-const OVERLAY_PRIORITY = ['hook', 'headline', 'caption', 'post'];
+// Stories ZIP slides get text baked in; all feed platforms download clean
+const STORIES_OVERLAY_PRIORITY = ['hook'];
 
-function truncateForOverlay(text: string, maxLen = 200): string {
-  if (text.length <= maxLen) return text;
-  // Cut at sentence boundary within limit
-  const sentences = text.split(/(?<=\.)\s+/);
-  let result = '';
-  for (const s of sentences) {
-    if ((result + (result ? ' ' : '') + s).length <= maxLen) {
-      result = result ? `${result} ${s}` : s;
-    } else break;
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function handleCopy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
-  return result.trim() || text.slice(0, maxLen).trimEnd();
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-xs text-bhhs-maroon hover:text-bhhs-dark font-medium transition-colors shrink-0"
+    >
+      {copied ? 'Copied!' : 'Copy'}
+    </button>
+  );
 }
 
 export default function PlatformTabs({ contentItems, canvaMap }: Props) {
@@ -47,15 +51,16 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
   const copyItems = itemsForPlatform.filter((i) => !supportingTypes.includes(i.contentType));
   const supportItems = itemsForPlatform.filter((i) => supportingTypes.includes(i.contentType));
 
-  // Best single text for overlay (first variation only, truncated to 1-2 sentences)
-  const overlayItem = OVERLAY_PRIORITY
-    .map((t) => itemsForPlatform.find((i) => i.contentType === t))
-    .find(Boolean);
-  const overlayText = overlayItem ? truncateForOverlay(overlayItem.copyText) : undefined;
-
-  // For Stories: all hook variations for the slide pack ZIP
+  // Stories ZIP: hook text baked into each slide
+  // Feed platforms: image downloads clean (logo only, no text overlay)
   const hookTexts = active === 'stories'
     ? itemsForPlatform.filter((i) => i.contentType === 'hook').map((i) => i.copyText)
+    : undefined;
+
+  const storiesOverlayText = active === 'stories'
+    ? (STORIES_OVERLAY_PRIORITY
+        .map((t) => itemsForPlatform.find((i) => i.contentType === t))
+        .find(Boolean)?.copyText)
     : undefined;
 
   return (
@@ -114,15 +119,18 @@ export default function PlatformTabs({ contentItems, canvaMap }: Props) {
           <div className="space-y-4">
             {supportItems.map((item) => (
               <div key={item.id} className="bg-bhhs-cream rounded-lg p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-bhhs-maroon mb-2">
-                  {COPY_TYPES[item.contentType] ?? item.contentType}
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-bhhs-maroon">
+                    {COPY_TYPES[item.contentType] ?? item.contentType}
+                  </p>
+                  <CopyButton text={item.copyText} />
+                </div>
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{item.copyText}</p>
                 {item.contentType === 'canva_prompt' && (
                   <ImageGenerator
                     platform={active}
                     prompt={item.copyText}
-                    overlayText={overlayText}
+                    overlayText={storiesOverlayText}
                     overlayTexts={hookTexts}
                   />
                 )}

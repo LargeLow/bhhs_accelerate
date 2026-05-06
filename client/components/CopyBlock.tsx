@@ -20,7 +20,7 @@ export default function CopyBlock({ label, text }: Props) {
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</p>
         <button
           onClick={handleCopy}
-          className="text-xs text-bhhs-maroon hover:text-bhhs-dark font-medium transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="text-xs text-bhhs-maroon hover:text-bhhs-dark font-medium transition-colors"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
