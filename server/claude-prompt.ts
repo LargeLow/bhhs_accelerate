@@ -27,38 +27,38 @@ PLATFORM REQUIREMENTS
 
 instagram:
   - 3 caption variations. Each self-contained, different tone (punchy / stat-led / conversational).
-  - Max 300 words each.
+  - Max 150 words each.
   - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.®"
   - 1 shared hashtag block: 10 hashtags, mix of Utah-specific and topic-specific.
-  - 1 imagery direction paragraph describing angle, mood, subjects, and Canva treatment.
-  - 1 Canva/AI image prompt for Midjourney or DALL-E if the agent wants an AI-generated background.
+  - 1 imagery direction: 2-3 sentences on angle, mood, subjects, and Canva treatment.
+  - 1 Canva/AI image prompt for DALL-E (2-3 sentences, visual scene only, no instructions).
 
 facebook:
-  - 2 post variations. One educational/shareable (400 words max). One short/ad-friendly (150 words max).
+  - 2 post variations. One educational/shareable (200 words max). One short/ad-friendly (100 words max).
   - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.® → [Agent URL]"
-  - 1 imagery direction paragraph.
+  - 1 imagery direction: 1-2 sentences.
 
 linkedin:
-  - 1 post, 300-400 words. Professional tone. Opens with an observation or reframe, not a question.
+  - 1 post, 200-250 words. Professional tone. Opens with an observation or reframe, not a question.
   - Ends with [Agent Name], brokerage name, [Agent Phone]. No tagline.
-  - 1 imagery direction note.
+  - 1 imagery direction: 1-2 sentences.
 
 stories:
   - 5 standalone hook lines — the opening frame of a Story or Reel, 1-2 sentences max.
   - Written to be read aloud or displayed as text overlay.
-  - 1 imagery direction describing slide deck or reel visual style.
-  - 1 Canva/AI image prompt.
+  - 1 imagery direction: 1-2 sentences on visual style.
+  - 1 Canva/AI image prompt for DALL-E (2-3 sentences, visual scene only).
 
 email:
   - 3 subject line options labeled as variations 1, 2, 3.
-  - 2 body variations: long-form (~350 words, variation 1) and short (~150 words, variation 2).
+  - 2 body variations: long-form (200 words max, variation 1) and short (100 words max, variation 2).
   - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.®"
 
 print:
   - 1 headline (8 words max).
   - 1 subhead (15 words max).
-  - 1 body block (100 words max).
-  - 1 imagery direction: describe ad layout, background, type treatment, BHHS color use (primary Cabernet #670038).
+  - 1 body block (75 words max).
+  - 1 imagery direction: 1-2 sentences on layout, background, type treatment, BHHS Cabernet #670038.
 
 x:
   - 2 post variations. Under 280 characters each. No hashtags. Standalone observations.
@@ -66,6 +66,7 @@ x:
 OUTPUT FORMAT
 Return a single valid JSON object matching this TypeScript interface exactly.
 Do not wrap in markdown or code blocks. Return raw JSON only.
+Keep strategyCore to 2-3 sentences maximum.
 
 interface GeneratedContent {
   campaignTitle: string;
