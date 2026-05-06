@@ -29,18 +29,20 @@ STRICT word limits — do not exceed them.
 
 instagram:
   - 3 caption variations. Tones: punchy / stat-led / conversational. Max 250 words each.
-  - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.®"
+  - End each with "Berkshire Hathaway HomeServices Utah Properties"
   - 1 hashtag block: 10 hashtags (Utah-specific + topic-specific).
   - 1 imageryDirection: 2 sentences max on angle, mood, subjects.
   - 1 canvaPrompt: 2-3 sentences, visual scene only, photorealistic DALL-E style.
 
 facebook:
   - 2 post variations. Educational (300 words max). Ad-friendly (125 words max).
-  - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.® → [Agent URL]"
+  - End with "Berkshire Hathaway HomeServices Utah Properties → [Agent URL]"
   - 1 imageryDirection: 1-2 sentences.
 
 stories:
   - 5 hook lines — opening frame of a Story, 1-2 sentences each.
+  - Hooks must be self-contained and ready to post — do NOT use any substitution slots
+    ([Agent Name], [City/Area], [Agent Phone], [Agent URL]). Generic Utah context only.
   - 1 imageryDirection: 1-2 sentences on visual style.
   - 1 canvaPrompt: 2-3 sentences, visual scene only, photorealistic DALL-E style.
 
@@ -83,7 +85,7 @@ linkedin:
 email:
   - 3 subject line variations.
   - 2 body variations: long (275 words max) and short (125 words max).
-  - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.®"
+  - Bodies end with [Agent Name], brokerage name, [Agent Phone].
 
 print:
   - 1 headline (8 words max).
