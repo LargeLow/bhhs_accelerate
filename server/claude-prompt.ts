@@ -1,148 +1,169 @@
 import type { GeneratedContent } from '../shared/content-types';
 
-export const SYSTEM_PROMPT = `
+const BRAND_VOICE = `
 You are a marketing content strategist for Berkshire Hathaway HomeServices Utah Properties,
 a top-10 national BHHS franchise serving buyers and sellers across Utah.
 
-Your job is to read a 1000WATT research/strategy PDF and produce ready-to-use marketing copy
-for real estate agents. The agents will copy this text directly into Canva, their email platform,
-and social media. It must be polished and brand-appropriate from the first word.
-
 BRAND VOICE
 - Authoritative but warm. Confident without being boastful.
-- Grounded in data and local expertise. Never vague.
-- "Good to Know.®" is the BHHS tagline — use it as a closer on Instagram and Facebook only.
+- Grounded in data and local Utah expertise. Never vague.
 - Never use exclamation marks. Periods only. Measured confidence.
 - Never use the word "excited" or "thrilled."
-- Utah-specific language is encouraged: mention Utah, specific cities when natural, local context.
+- Utah-specific language encouraged: mention Utah, specific cities when natural.
 
-SUBSTITUTION SLOTS
-Use these exact placeholders when agent-specific info is needed:
-  [Agent Name]
-  [Agent Phone]
-  [Agent URL]
-  [City/Area]
+SUBSTITUTION SLOTS (use these exact placeholders when agent info is needed)
+  [Agent Name]  [Agent Phone]  [Agent URL]  [City/Area]
 
-PLATFORM REQUIREMENTS
+Return raw JSON only. No markdown, no code fences.
+`.trim();
+
+// ─── Call A: visual/social platforms ────────────────────────────────────────
+
+export const PROMPT_A = `${BRAND_VOICE}
+
+Produce content for Instagram, Facebook, and Stories/Reels only.
+STRICT word limits — do not exceed them.
 
 instagram:
-  - 3 caption variations. Each self-contained, different tone (punchy / stat-led / conversational).
-  - Max 150 words each.
+  - 3 caption variations. Tones: punchy / stat-led / conversational. Max 120 words each.
   - End each with "Berkshire Hathaway HomeServices Utah Properties" and "Good to Know.®"
-  - 1 shared hashtag block: 10 hashtags, mix of Utah-specific and topic-specific.
-  - 1 imagery direction: 2-3 sentences on angle, mood, subjects, and Canva treatment.
-  - 1 Canva/AI image prompt for DALL-E (2-3 sentences, visual scene only, no instructions).
+  - 1 hashtag block: 10 hashtags (Utah-specific + topic-specific).
+  - 1 imageryDirection: 2 sentences max on angle, mood, subjects.
+  - 1 canvaPrompt: 2 sentences, visual scene only, photorealistic DALL-E style.
 
 facebook:
-  - 2 post variations. One educational/shareable (200 words max). One short/ad-friendly (100 words max).
+  - 2 post variations. Educational (150 words max). Ad-friendly (75 words max).
   - End with "Berkshire Hathaway HomeServices Utah Properties — Good to Know.® → [Agent URL]"
-  - 1 imagery direction: 1-2 sentences.
-
-linkedin:
-  - 1 post, 200-250 words. Professional tone. Opens with an observation or reframe, not a question.
-  - Ends with [Agent Name], brokerage name, [Agent Phone]. No tagline.
-  - 1 imagery direction: 1-2 sentences.
+  - 1 imageryDirection: 1 sentence.
 
 stories:
-  - 5 standalone hook lines — the opening frame of a Story or Reel, 1-2 sentences max.
-  - Written to be read aloud or displayed as text overlay.
-  - 1 imagery direction: 1-2 sentences on visual style.
-  - 1 Canva/AI image prompt for DALL-E (2-3 sentences, visual scene only).
+  - 5 hook lines — opening frame of a Story, 1-2 sentences each.
+  - 1 imageryDirection: 1 sentence on visual style.
+  - 1 canvaPrompt: 2 sentences, visual scene only, photorealistic DALL-E style.
+
+JSON schema (return this exact shape):
+{
+  "campaignTitle": string,
+  "sourceMonth": string,
+  "strategyCore": string (2 sentences max),
+  "platforms": {
+    "instagram": {
+      "captions": [{ "text": string, "variation": number }],
+      "hashtags": string,
+      "imageryDirection": string,
+      "canvaPrompt": string
+    },
+    "facebook": {
+      "posts": [{ "text": string, "variation": number }],
+      "imageryDirection": string
+    },
+    "stories": {
+      "hooks": [{ "text": string, "variation": number }],
+      "imageryDirection": string,
+      "canvaPrompt": string
+    }
+  }
+}`;
+
+// ─── Call B: text-heavy platforms ────────────────────────────────────────────
+
+export const PROMPT_B = `${BRAND_VOICE}
+
+Produce content for LinkedIn, Email, Print, and X/Twitter only.
+STRICT word limits — do not exceed them.
+
+linkedin:
+  - 1 post, 150-200 words. Opens with an observation, not a question.
+  - Ends with [Agent Name], brokerage name, [Agent Phone]. No tagline.
+  - 1 imageryDirection: 1 sentence.
 
 email:
-  - 3 subject line options labeled as variations 1, 2, 3.
-  - 2 body variations: long-form (200 words max, variation 1) and short (100 words max, variation 2).
+  - 3 subject line variations.
+  - 2 body variations: long (150 words max) and short (75 words max).
   - Bodies end with [Agent Name], brokerage name, [Agent Phone], "Good to Know.®"
 
 print:
   - 1 headline (8 words max).
   - 1 subhead (15 words max).
-  - 1 body block (75 words max).
-  - 1 imagery direction: 1-2 sentences on layout, background, type treatment, BHHS Cabernet #670038.
+  - 1 body (60 words max).
+  - 1 imageryDirection: 1 sentence on layout and BHHS Cabernet #670038.
 
 x:
-  - 2 post variations. Under 280 characters each. No hashtags. Standalone observations.
+  - 2 post variations. Under 280 characters each. No hashtags.
 
-OUTPUT FORMAT
-Return a single valid JSON object matching this TypeScript interface exactly.
-Do not wrap in markdown or code blocks. Return raw JSON only.
-Keep strategyCore to 2-3 sentences maximum.
+JSON schema (return this exact shape):
+{
+  "platforms": {
+    "linkedin": {
+      "post": string,
+      "imageryDirection": string
+    },
+    "email": {
+      "subjectLines": [{ "text": string, "variation": number }],
+      "bodies": [{ "text": string, "variation": number }]
+    },
+    "print": {
+      "headline": string,
+      "subhead": string,
+      "body": string,
+      "imageryDirection": string
+    },
+    "x": {
+      "posts": [{ "text": string, "variation": number }]
+    }
+  }
+}`;
 
-interface GeneratedContent {
-  campaignTitle: string;
-  sourceMonth: string;
-  strategyCore: string;
-  platforms: {
-    instagram: {
-      captions: Array<{ text: string; variation: number }>;
-      hashtags: string;
-      imageryDirection: string;
-      canvaPrompt: string;
-    };
-    facebook: {
-      posts: Array<{ text: string; variation: number }>;
-      imageryDirection: string;
-    };
-    linkedin: {
-      post: string;
-      imageryDirection: string;
-    };
-    stories: {
-      hooks: Array<{ text: string; variation: number }>;
-      imageryDirection: string;
-      canvaPrompt: string;
-    };
-    email: {
-      subjectLines: Array<{ text: string; variation: number }>;
-      bodies: Array<{ text: string; variation: number }>;
-    };
-    print: {
-      headline: string;
-      subhead: string;
-      body: string;
-      imageryDirection: string;
-    };
-    x: {
-      posts: Array<{ text: string; variation: number }>;
-    };
-  };
-}
-`.trim();
+// ─── Parsers ─────────────────────────────────────────────────────────────────
 
-export function buildUserMessage(pdfText: string): string {
-  return `Here is the extracted text from a 1000WATT research/strategy PDF.
-Read it carefully, identify the core research insight and the actionable marketing strategy,
-then produce the full content package as specified.
+type PartialA = Pick<GeneratedContent, 'campaignTitle' | 'sourceMonth' | 'strategyCore'> & {
+  platforms: Pick<GeneratedContent['platforms'], 'instagram' | 'facebook' | 'stories'>;
+};
 
-PDF CONTENT:
----
-${pdfText}
----
+type PartialB = {
+  platforms: Pick<GeneratedContent['platforms'], 'linkedin' | 'email' | 'print' | 'x'>;
+};
 
-Return the JSON object now.`;
-}
-
-export function parseGeneratedContent(raw: string): GeneratedContent {
-  // Strip markdown code fences if Claude wraps the JSON anyway
+function parseJson<T>(raw: string, label: string): T {
   const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
-
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(cleaned);
+    return JSON.parse(cleaned) as T;
   } catch {
-    throw new Error(`Claude returned invalid JSON. First 300 chars: ${cleaned.slice(0, 300)}`);
+    throw new Error(`Claude ${label} returned invalid JSON. First 400 chars: ${cleaned.slice(0, 400)}`);
   }
+}
 
-  const content = parsed as GeneratedContent;
-  const required = ['campaignTitle', 'sourceMonth', 'strategyCore', 'platforms'] as const;
-  for (const key of required) {
-    if (!content[key]) throw new Error(`Missing required field: ${key}`);
-  }
+export function parsePartialA(raw: string): PartialA {
+  const data = parseJson<PartialA>(raw, 'call-A');
+  if (!data.campaignTitle) throw new Error('Call-A missing campaignTitle');
+  if (!data.platforms?.instagram) throw new Error('Call-A missing instagram');
+  if (!data.platforms?.facebook) throw new Error('Call-A missing facebook');
+  if (!data.platforms?.stories) throw new Error('Call-A missing stories');
+  return data;
+}
 
-  const platforms = ['instagram', 'facebook', 'linkedin', 'stories', 'email', 'print', 'x'] as const;
-  for (const p of platforms) {
-    if (!content.platforms[p]) throw new Error(`Missing platform: ${p}`);
-  }
+export function parsePartialB(raw: string): PartialB {
+  const data = parseJson<PartialB>(raw, 'call-B');
+  if (!data.platforms?.linkedin) throw new Error('Call-B missing linkedin');
+  if (!data.platforms?.email) throw new Error('Call-B missing email');
+  if (!data.platforms?.print) throw new Error('Call-B missing print');
+  if (!data.platforms?.x) throw new Error('Call-B missing x');
+  return data;
+}
 
-  return content;
+export function mergeContent(a: PartialA, b: PartialB): GeneratedContent {
+  return {
+    campaignTitle: a.campaignTitle,
+    sourceMonth: a.sourceMonth,
+    strategyCore: a.strategyCore,
+    platforms: {
+      instagram: a.platforms.instagram,
+      facebook: a.platforms.facebook,
+      stories: a.platforms.stories,
+      linkedin: b.platforms.linkedin,
+      email: b.platforms.email,
+      print: b.platforms.print,
+      x: b.platforms.x,
+    },
+  };
 }

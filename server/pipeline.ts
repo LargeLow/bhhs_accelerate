@@ -1,57 +1,55 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { SYSTEM_PROMPT, parseGeneratedContent } from './claude-prompt';
+import { PROMPT_A, PROMPT_B, parsePartialA, parsePartialB, mergeContent } from './claude-prompt';
 import type { GeneratedContent, ContentRow, Platform, ContentType } from '../shared/content-types';
 
 const client = new Anthropic();
 
-// Accept 1–3 PDF buffers and send them all to Claude in a single call.
-// Multiple documents give Claude full context — research PDF + topic drop together.
 export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedContent> {
   const documentBlocks = pdfBuffers.map((buf) => ({
     type: 'document' as const,
-    source: {
-      type: 'base64' as const,
-      media_type: 'application/pdf' as const,
-      data: buf.toString('base64'),
-    },
+    source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: buf.toString('base64') },
   }));
 
-  console.log(`[claude] sending ${pdfBuffers.length} PDF(s) — total size: ${pdfBuffers.reduce((n, b) => n + b.length, 0)} bytes`);
+  const totalBytes = pdfBuffers.reduce((n, b) => n + b.length, 0);
+  console.log(`[claude] sending ${pdfBuffers.length} PDF(s) — ${totalBytes} bytes — running A+B in parallel`);
 
-  const response = await client.messages.create(
-    {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 16000,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
+  const pdfNote = pdfBuffers.length > 1
+    ? 'These PDFs form one strategy package — read them together, then produce the content specified above.'
+    : 'Read this PDF carefully, then produce the content specified above.';
+
+  async function call(systemPrompt: string, label: string) {
+    const res = await client.messages.create(
+      {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
+        system: systemPrompt,
+        messages: [{
           role: 'user',
-          content: [
-            ...documentBlocks,
-            {
-              type: 'text',
-              text: pdfBuffers.length > 1
-                ? 'These PDFs form one complete strategy package — the first is the research/survey context, the subsequent file(s) are the topic drop with actionable highlights. Read them together as a single strategy, then produce the full content package as specified in your instructions. Return the JSON object now.'
-                : 'Read this 1000WATT research/strategy PDF carefully, identify the core research insight and the actionable marketing strategy, then produce the full content package as specified in your instructions. Return the JSON object now.',
-            },
-          ],
-        },
-      ],
-    },
-    { timeout: 180_000 } // 3-minute hard timeout
-  );
+          content: [...documentBlocks, { type: 'text', text: `${pdfNote} Return the JSON object now.` }],
+        }],
+      },
+      { timeout: 180_000 },
+    );
 
-  const textBlock = response.content.find((b) => b.type === 'text');
-  if (!textBlock || textBlock.type !== 'text') {
-    throw new Error('No text content in Claude response');
+    const block = res.content.find((b) => b.type === 'text');
+    if (!block || block.type !== 'text') throw new Error(`No text in Claude ${label} response`);
+
+    console.log(`[claude] ${label} done — stop_reason: ${res.stop_reason}, tokens: ${res.usage.output_tokens}`);
+    if (res.stop_reason === 'max_tokens') {
+      throw new Error(`Claude ${label} hit max_tokens (${res.usage.output_tokens}) — output truncated`);
+    }
+    return block.text;
   }
 
-  console.log(`[claude] response received — stop_reason: ${response.stop_reason}, output_tokens: ${response.usage.output_tokens}`);
-  if (response.stop_reason === 'max_tokens') {
-    throw new Error(`Claude hit max_tokens (${response.usage.output_tokens}) — JSON was truncated`);
-  }
+  // Both calls share the same PDF context — run in parallel
+  const [rawA, rawB] = await Promise.all([
+    call(PROMPT_A, 'call-A'),
+    call(PROMPT_B, 'call-B'),
+  ]);
 
-  return parseGeneratedContent(textBlock.text);
+  const partA = parsePartialA(rawA);
+  const partB = parsePartialB(rawB);
+  return mergeContent(partA, partB);
 }
 
 export function flattenToRows(campaignId: string, content: GeneratedContent): ContentRow[] {
