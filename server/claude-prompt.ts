@@ -129,29 +129,43 @@ type PartialB = {
   platforms: Pick<GeneratedContent['platforms'], 'linkedin' | 'email' | 'print' | 'x'>;
 };
 
+function extractFirstJsonObject(text: string): string {
+  const start = text.indexOf('{');
+  if (start === -1) return text;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && inString) { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (!inString) {
+      if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) return text.slice(start, i + 1); }
+    }
+  }
+  return text.slice(start); // truncated — return what we have
+}
+
 function parseJson<T>(raw: string, label: string): T {
-  // Strip code fences and any preamble before the first {
-  let cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
-  const jsonStart = cleaned.indexOf('{');
-  if (jsonStart > 0) cleaned = cleaned.slice(jsonStart);
-  const jsonEnd = cleaned.lastIndexOf('}');
-  if (jsonEnd !== -1 && jsonEnd < cleaned.length - 1) cleaned = cleaned.slice(0, jsonEnd + 1);
+  // Strip code fences, then extract the first balanced JSON object
+  const stripped = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+  const cleaned = extractFirstJsonObject(stripped);
 
   try {
     return JSON.parse(cleaned) as T;
   } catch (firstErr) {
-    // Claude sometimes writes literal newlines inside JSON strings — replace them
-    const repaired = cleaned.replace(/("(?:[^"\\]|\\.)*")/gs, (match) =>
-      match.replace(/\n/g, '\\n').replace(/\r/g, ''),
+    // Repair literal newlines inside JSON strings (Claude sometimes emits them)
+    const repaired = cleaned.replace(/("(?:[^"\\]|\\.)*")/gs, (m) =>
+      m.replace(/\n/g, '\\n').replace(/\r/g, ''),
     );
     try {
       return JSON.parse(repaired) as T;
     } catch {
       const preview = cleaned.slice(0, 600);
       const tail = cleaned.slice(-200);
-      throw new Error(
-        `Claude ${label} invalid JSON (${firstErr})\nFirst 600: ${preview}\nLast 200: ${tail}`,
-      );
+      throw new Error(`Claude ${label} invalid JSON (${firstErr})\nFirst 600: ${preview}\nLast 200: ${tail}`);
     }
   }
 }
