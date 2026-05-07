@@ -38,6 +38,7 @@ facebook:
   - 2 post variations. Educational (300 words max). Ad-friendly (125 words max).
   - End with "Berkshire Hathaway HomeServices Utah Properties → [Agent URL]"
   - 1 imageryDirection: 1-2 sentences.
+  - 1 canvaPrompt: 2-3 sentences, photorealistic DALL-E scene, no text in image.
 
 stories:
   - 5 hook lines — opening frame of a Story or Reel, displayed as text on a static image.
@@ -64,7 +65,8 @@ JSON schema (return this exact shape):
     },
     "facebook": {
       "posts": [{ "text": string, "variation": number }],
-      "imageryDirection": string
+      "imageryDirection": string,
+      "canvaPrompt": string
     },
     "stories": {
       "hooks": [{ "text": string, "variation": number }],
@@ -85,6 +87,7 @@ linkedin:
   - 1 post, 250-275 words. Opens with an observation, not a question.
   - Ends with [Agent Name], brokerage name, [Agent Phone]. No tagline.
   - 1 imageryDirection: 1-2 sentences.
+  - 1 canvaPrompt: 2-3 sentences, photorealistic DALL-E scene, professional tone, no text in image.
 
 email:
   - 3 subject line variations.
@@ -96,6 +99,7 @@ print:
   - 1 subhead (15 words max).
   - 1 body (75 words max).
   - 1 imageryDirection: 1-2 sentences on layout and BHHS Cabernet #670038.
+  - 1 canvaPrompt: 2-3 sentences, photorealistic DALL-E scene suitable for a print ad background, no text in image.
 
 x:
   - 2 post variations. Under 280 characters each. No hashtags.
@@ -105,7 +109,8 @@ JSON schema (return this exact shape):
   "platforms": {
     "linkedin": {
       "post": string,
-      "imageryDirection": string
+      "imageryDirection": string,
+      "canvaPrompt": string
     },
     "email": {
       "subjectLines": [{ "text": string, "variation": number }],
@@ -115,7 +120,8 @@ JSON schema (return this exact shape):
       "headline": string,
       "subhead": string,
       "body": string,
-      "imageryDirection": string
+      "imageryDirection": string,
+      "canvaPrompt": string
     },
     "x": {
       "posts": [{ "text": string, "variation": number }]

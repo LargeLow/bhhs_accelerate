@@ -31,10 +31,12 @@ export interface GeneratedContent {
     facebook: {
       posts: Variation[];
       imageryDirection: string;
+      canvaPrompt: string;
     };
     linkedin: {
       post: string;
       imageryDirection: string;
+      canvaPrompt: string;
     };
     stories: {
       hooks: Variation[];
@@ -50,6 +52,7 @@ export interface GeneratedContent {
       subhead: string;
       body: string;
       imageryDirection: string;
+      canvaPrompt: string;
     };
     x: {
       posts: Variation[];

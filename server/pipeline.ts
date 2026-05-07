@@ -66,9 +66,11 @@ export function flattenToRows(campaignId: string, content: GeneratedContent): Co
 
   for (const p of content.platforms.facebook.posts) push('facebook', 'post', p.text, p.variation);
   push('facebook', 'imagery_direction', content.platforms.facebook.imageryDirection);
+  push('facebook', 'canva_prompt', content.platforms.facebook.canvaPrompt);
 
   push('linkedin', 'post', content.platforms.linkedin.post);
   push('linkedin', 'imagery_direction', content.platforms.linkedin.imageryDirection);
+  push('linkedin', 'canva_prompt', content.platforms.linkedin.canvaPrompt);
 
   for (const h of content.platforms.stories.hooks) push('stories', 'hook', h.text, h.variation);
   push('stories', 'imagery_direction', content.platforms.stories.imageryDirection);
@@ -81,6 +83,7 @@ export function flattenToRows(campaignId: string, content: GeneratedContent): Co
   push('print', 'subhead', content.platforms.print.subhead);
   push('print', 'body', content.platforms.print.body);
   push('print', 'imagery_direction', content.platforms.print.imageryDirection);
+  push('print', 'canva_prompt', content.platforms.print.canvaPrompt);
 
   for (const p of content.platforms.x.posts) push('x', 'post', p.text, p.variation);
 
