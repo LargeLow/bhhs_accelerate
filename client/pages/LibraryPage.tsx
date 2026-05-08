@@ -27,7 +27,7 @@ export default function LibraryPage({ user }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-bhhs-maroon text-white px-6 py-4 flex items-center justify-between">
+      <header className="bg-bhhs-maroon text-white px-4 sm:px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="font-serif text-xl font-light tracking-wide">Accelerate</h1>
           <p className="text-white/60 text-xs">BHHS Utah Properties</p>
@@ -45,7 +45,7 @@ export default function LibraryPage({ user }: Props) {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {isLoading && <p className="text-gray-500 text-sm">Loading content…</p>}
 
         {!isLoading && campaigns.length === 0 && (
@@ -56,7 +56,7 @@ export default function LibraryPage({ user }: Props) {
         {latest && (
           <section className="mb-12">
             <p className="text-xs uppercase tracking-widest text-bhhs-maroon font-medium mb-3">Latest Release</p>
-            <div className="bg-bhhs-maroon text-white rounded-xl p-8 flex items-start justify-between gap-6">
+            <div className="bg-bhhs-maroon text-white rounded-xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
               <div className="flex-1">
                 <p className="text-white/60 text-sm mb-1">{latest.sourceMonth}</p>
                 <h2 className="font-serif text-2xl font-light mb-3">{latest.title}</h2>
@@ -66,7 +66,7 @@ export default function LibraryPage({ user }: Props) {
               </div>
               <Link
                 to={`/campaign/${latest.id}`}
-                className="shrink-0 bg-white text-bhhs-maroon px-5 py-2.5 rounded text-sm font-medium hover:bg-bhhs-cream transition-colors"
+                className="sm:shrink-0 bg-white text-bhhs-maroon px-5 py-2.5 rounded text-sm font-medium hover:bg-bhhs-cream transition-colors text-center"
               >
                 View Content →
               </Link>

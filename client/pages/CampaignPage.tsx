@@ -45,21 +45,21 @@ export default function CampaignPage({ user }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-bhhs-maroon text-white px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center gap-4">
-          <Link to="/" className="text-white/60 hover:text-white text-sm transition-colors">← Library</Link>
-          <div className="flex-1">
+      <header className="bg-bhhs-maroon text-white px-4 sm:px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center gap-3">
+          <Link to="/" className="text-white/60 hover:text-white text-sm transition-colors shrink-0">← Library</Link>
+          <div className="flex-1 min-w-0">
             <p className="text-white/60 text-xs">{campaign.sourceMonth}</p>
-            <h1 className="font-serif text-lg font-light">{campaign.title}</h1>
+            <h1 className="font-serif text-base sm:text-lg font-light leading-snug">{campaign.title}</h1>
           </div>
           {user.role === 'admin' && (
-            <Link to="/admin" className="text-white/60 hover:text-white text-sm">Admin</Link>
+            <Link to="/admin" className="text-white/60 hover:text-white text-sm shrink-0">Admin</Link>
           )}
         </div>
       </header>
 
       {campaign.strategyCore && (
-        <div className="bg-bhhs-cream border-b border-gray-200 px-6 py-3">
+        <div className="bg-bhhs-cream border-b border-gray-200 px-4 sm:px-6 py-3">
           <p className="max-w-6xl mx-auto text-sm text-gray-600 italic">{campaign.strategyCore}</p>
         </div>
       )}
