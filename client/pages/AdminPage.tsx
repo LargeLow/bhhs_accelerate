@@ -8,7 +8,23 @@ interface UserRecord {
   email: string;
   name: string;
   role: 'admin' | 'agent';
+  lastLoginAt: string | null;
+  lastActiveAt: string | null;
   createdAt: string;
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return 'Never';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 2) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
 }
 
 async function fetchAllCampaigns(): Promise<(CampaignSummary & { pdfFilename: string; processedAt: string | null })[]> {
@@ -356,8 +372,10 @@ export default function AdminPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Email</th>
                     <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Role</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Last Login</th>
+                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Last Active</th>
                     <th className="px-4 py-2.5" />
                   </tr>
                 </thead>
@@ -365,12 +383,14 @@ export default function AdminPage() {
                   {userList.map((u) => (
                     <tr key={u.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
-                      <td className="px-4 py-3 text-gray-500">{u.email}</td>
+                      <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{u.email}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.role === 'admin' ? 'bg-bhhs-maroon/10 text-bhhs-maroon' : 'bg-gray-100 text-gray-600'}`}>
                           {u.role}
                         </span>
                       </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{timeAgo(u.lastLoginAt)}</td>
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{timeAgo(u.lastActiveAt)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3 justify-end">
                           {resetTargetId === u.id ? (

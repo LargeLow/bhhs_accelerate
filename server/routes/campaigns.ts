@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { db } from '../db';
-import { campaigns, contentItems, canvaTemplates, campaignImages } from '../schema';
+import { campaigns, contentItems, canvaTemplates, campaignImages, users } from '../schema';
 import { eq, desc } from 'drizzle-orm';
 import { requireAuth, type AuthenticatedRequest } from '../auth';
 
@@ -47,6 +47,11 @@ campaignsRouter.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: 
   // Admins can preview drafts; agents only see published content
   if (campaign.status !== 'published' && req.user?.role !== 'admin') {
     return res.status(404).json({ error: 'Campaign not found' });
+  }
+
+  // Fire-and-forget activity timestamp — doesn't block the response
+  if (req.user?.id) {
+    db.update(users).set({ lastActiveAt: new Date() }).where(eq(users.id, req.user.id)).catch(() => {});
   }
 
   const items = await db

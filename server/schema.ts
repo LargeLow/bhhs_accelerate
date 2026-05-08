@@ -44,6 +44,8 @@ export const users = pgTable('users', {
   name:         text('name').notNull(),
   phone:        text('phone'),
   agentUrl:     text('agent_url'),
+  lastLoginAt:  timestamp('last_login_at'),
+  lastActiveAt: timestamp('last_active_at'),
   createdAt:    timestamp('created_at').defaultNow().notNull(),
 });
 

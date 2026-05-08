@@ -24,6 +24,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
   await db.insert(sessions).values({ id: sessionId, userId: user.id, expiresAt });
+  await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
 
   res.cookie('session', sessionId, {
     httpOnly: true,

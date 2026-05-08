@@ -192,7 +192,15 @@ adminRouter.delete('/campaigns/:id/images/:imageId', async (req: AuthenticatedRe
 
 adminRouter.get('/users', async (_req: AuthenticatedRequest, res: Response) => {
   const rows = await db
-    .select({ id: users.id, email: users.email, name: users.name, role: users.role, createdAt: users.createdAt })
+    .select({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      role: users.role,
+      lastLoginAt: users.lastLoginAt,
+      lastActiveAt: users.lastActiveAt,
+      createdAt: users.createdAt,
+    })
     .from(users)
     .orderBy(users.createdAt);
   return res.json(rows);
