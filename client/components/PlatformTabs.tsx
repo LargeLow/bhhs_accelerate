@@ -137,6 +137,7 @@ export default function PlatformTabs({ contentItems, canvaMap, campaignId, isAdm
                   <ImageGenerator
                     platform={active}
                     prompt={item.copyText}
+                    campaignId={campaignId}
                     overlayText={storiesOverlayText}
                     overlayTexts={hookTexts}
                     adminImage={adminImage}

@@ -51,6 +51,7 @@ export async function compositeImage(
 }
 
 // Build N slides from the same background with different text, return array of base64 PNGs
+// Sequential (not parallel) to keep peak memory low — each PNG buffer is freed before the next
 export async function buildSlides(
   imageB64: string,
   width: number,
@@ -58,11 +59,11 @@ export async function buildSlides(
   texts: string[],
   options: CompositeOptions = {},
 ): Promise<string[]> {
-  return Promise.all(
-    texts.map((text) =>
-      compositeImage(imageB64, width, height, { ...options, overlayText: text }),
-    ),
-  );
+  const results: string[] = [];
+  for (const text of texts) {
+    results.push(await compositeImage(imageB64, width, height, { ...options, overlayText: text }));
+  }
+  return results;
 }
 
 // ─── SVG helpers ────────────────────────────────────────────────────────────

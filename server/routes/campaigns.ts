@@ -69,10 +69,27 @@ campaignsRouter.get('/:id', requireAuth, async (req: AuthenticatedRequest, res: 
       id: campaignImages.id,
       platform: campaignImages.platform,
       filename: campaignImages.filename,
-      imageData: campaignImages.imageData,
     })
     .from(campaignImages)
     .where(eq(campaignImages.campaignId, id));
 
   return res.json({ ...campaign, contentItems: items, canvaTemplates: templates, campaignImages: images });
+});
+
+// Serve a single campaign image as PNG — avoids embedding large base64 in campaign detail
+campaignsRouter.get('/:id/images/:imageId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { imageId } = req.params;
+
+  const [row] = await db
+    .select({ imageData: campaignImages.imageData })
+    .from(campaignImages)
+    .where(eq(campaignImages.id, imageId))
+    .limit(1);
+
+  if (!row) return res.status(404).json({ error: 'Image not found' });
+
+  const buf = Buffer.from(row.imageData, 'base64');
+  res.set('Content-Type', 'image/png');
+  res.set('Cache-Control', 'private, max-age=86400');
+  return res.send(buf);
 });

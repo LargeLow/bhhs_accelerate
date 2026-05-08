@@ -92,7 +92,7 @@ export interface CampaignImageRecord {
   id: string;
   platform: Platform;
   filename: string;
-  imageData: string; // base64 PNG
+  imageData?: string; // base64 PNG — only present when fetched directly
 }
 
 export interface CampaignDetail extends CampaignSummary {

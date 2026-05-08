@@ -33,14 +33,8 @@ export default function AdminImageUpload({ campaignId, platform, existing, onUpl
         return;
       }
       // Refetch the full image data by triggering parent refresh via optimistic update
-      const meta = await res.json();
-      // We need the imageData — re-fetch campaign images
-      const imgRes = await fetch(`/api/campaigns/${campaignId}`, { credentials: 'include' });
-      if (imgRes.ok) {
-        const campaign = await imgRes.json();
-        const uploaded = campaign.campaignImages?.find((i: CampaignImageRecord) => i.id === meta.id);
-        if (uploaded) onUploaded(uploaded);
-      }
+      const meta = await res.json() as { id: string; platform: string; filename: string };
+      onUploaded({ id: meta.id, platform: meta.platform as CampaignImageRecord['platform'], filename: meta.filename });
     } catch {
       setError('Network error — please try again');
     } finally {
@@ -70,7 +64,7 @@ export default function AdminImageUpload({ campaignId, platform, existing, onUpl
       {existing ? (
         <div className="space-y-2">
           <img
-            src={`data:image/png;base64,${existing.imageData}`}
+            src={`/api/campaigns/${campaignId}/images/${existing.id}`}
             alt="Admin override"
             className="w-full rounded border border-gray-200"
           />

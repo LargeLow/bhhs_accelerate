@@ -1,5 +1,10 @@
 import 'dotenv/config';
+import sharp from 'sharp';
 import express from 'express';
+
+// Disable sharp's internal tile cache and limit concurrency to control memory
+sharp.cache(false);
+sharp.concurrency(1);
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';

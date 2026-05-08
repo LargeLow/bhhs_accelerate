@@ -4,12 +4,13 @@ import type { Platform, CampaignImageRecord } from '../../shared/content-types';
 interface Props {
   platform: Platform;
   prompt: string;
+  campaignId: string;
   overlayText?: string;
   overlayTexts?: string[];
   adminImage?: CampaignImageRecord; // marketing-team override image
 }
 
-export default function ImageGenerator({ platform, prompt, overlayText, overlayTexts, adminImage }: Props) {
+export default function ImageGenerator({ platform, prompt, campaignId, overlayText, overlayTexts, adminImage }: Props) {
   const [loading, setLoading] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -92,30 +93,25 @@ export default function ImageGenerator({ platform, prompt, overlayText, overlayT
 
   const slideLabel = overlayTexts ? `${overlayTexts.length} slide${overlayTexts.length !== 1 ? 's' : ''}` : '';
 
-  function downloadAdminImage() {
-    if (!adminImage) return;
-    const link = document.createElement('a');
-    link.href = `data:image/png;base64,${adminImage.imageData}`;
-    link.download = `bhhs-${platform}-image.png`;
-    link.click();
-  }
+  const adminImageUrl = adminImage ? `/api/campaigns/${campaignId}/images/${adminImage.id}` : null;
 
   return (
     <div className="mt-3 space-y-3">
       {/* Admin-approved image — shown as primary option */}
-      {adminImage && (
+      {adminImage && adminImageUrl && (
         <div className="space-y-2">
           <img
-            src={`data:image/png;base64,${adminImage.imageData}`}
+            src={adminImageUrl}
             alt="Team-approved visual"
             className="w-full rounded-lg border border-gray-200"
           />
-          <button
-            onClick={downloadAdminImage}
-            className="w-full bg-bhhs-maroon text-white text-xs py-2 rounded hover:bg-bhhs-dark transition-colors"
+          <a
+            href={adminImageUrl}
+            download={`bhhs-${platform}-image.png`}
+            className="block w-full text-center bg-bhhs-maroon text-white text-xs py-2 rounded hover:bg-bhhs-dark transition-colors"
           >
             Download PNG
-          </button>
+          </a>
           <p className="text-xs text-gray-400 text-center">— or generate an AI alternative below —</p>
         </div>
       )}
