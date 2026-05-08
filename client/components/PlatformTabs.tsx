@@ -72,8 +72,21 @@ export default function PlatformTabs({ contentItems, canvaMap, campaignId, isAdm
 
   return (
     <div>
-      {/* Platform tab bar */}
-      <div className="flex gap-1 flex-wrap mb-8 border-b border-gray-200 pb-0">
+      {/* Mobile: select dropdown */}
+      <div className="md:hidden mb-6">
+        <select
+          value={active}
+          onChange={(e) => setActive(e.target.value as Platform)}
+          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-bhhs-maroon"
+        >
+          {PLATFORMS.map((p) => (
+            <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop: tab bar */}
+      <div className="hidden md:flex gap-1 flex-wrap mb-8 border-b border-gray-200 pb-0">
         {PLATFORMS.map((p) => (
           <button
             key={p}

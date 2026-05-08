@@ -263,11 +263,11 @@ export default function AdminPage() {
             </h2>
             <div className="space-y-3">
               {drafts.map((c) => (
-                <div key={c.id} className="bg-white border border-amber-200 rounded-lg p-4 flex items-center gap-4">
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-400">{c.sourceMonth} · {c.pdfFilename}</p>
+                <div key={c.id} className="bg-white border border-amber-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-400 truncate">{c.sourceMonth} · {c.pdfFilename}</p>
                     <p className="font-medium text-gray-900">{c.title}</p>
-                    {c.strategyCore && <p className="text-sm text-gray-500 mt-0.5">{c.strategyCore}</p>}
+                    {c.strategyCore && <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{c.strategyCore}</p>}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <Link to={`/campaign/${c.id}`} className="btn-secondary text-xs">
@@ -294,8 +294,8 @@ export default function AdminPage() {
             </h2>
             <div className="space-y-2">
               {published.map((c) => (
-                <div key={c.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
-                  <div className="flex-1">
+                <div key={c.id} className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400">{c.sourceMonth}</p>
                     <p className="font-medium text-gray-900">{c.title}</p>
                   </div>
