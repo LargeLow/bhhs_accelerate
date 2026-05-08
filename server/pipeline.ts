@@ -5,9 +5,12 @@ import type { GeneratedContent, ContentRow, Platform, ContentType } from '../sha
 const client = new Anthropic();
 
 export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedContent> {
-  const documentBlocks = pdfBuffers.map((buf) => ({
+  // cache_control on the last PDF block caches all PDF content for both parallel calls.
+  // Whichever of call-A / call-B starts second will read from cache instead of re-processing.
+  const documentBlocks = pdfBuffers.map((buf, i) => ({
     type: 'document' as const,
     source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: buf.toString('base64') },
+    ...(i === pdfBuffers.length - 1 ? { cache_control: { type: 'ephemeral' as const } } : {}),
   }));
 
   const totalBytes = pdfBuffers.reduce((n, b) => n + b.length, 0);
@@ -22,7 +25,7 @@ export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedCo
       {
         model: 'claude-sonnet-4-6',
         max_tokens: 8000,
-        system: systemPrompt,
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [{
           role: 'user',
           content: [...documentBlocks, { type: 'text', text: `${pdfNote} Return the JSON object now.` }],
@@ -34,9 +37,14 @@ export async function generateContent(pdfBuffers: Buffer[]): Promise<GeneratedCo
     const block = res.content.find((b) => b.type === 'text');
     if (!block || block.type !== 'text') throw new Error(`No text in Claude ${label} response`);
 
-    console.log(`[claude] ${label} done — stop_reason: ${res.stop_reason}, tokens: ${res.usage.output_tokens}`);
+    const { input_tokens, output_tokens, cache_creation_input_tokens, cache_read_input_tokens } = res.usage;
+    console.log(
+      `[claude] ${label} done — stop: ${res.stop_reason}, in: ${input_tokens}, out: ${output_tokens}` +
+      (cache_creation_input_tokens ? `, cache_write: ${cache_creation_input_tokens}` : '') +
+      (cache_read_input_tokens ? `, cache_read: ${cache_read_input_tokens}` : ''),
+    );
     if (res.stop_reason === 'max_tokens') {
-      throw new Error(`Claude ${label} hit max_tokens (${res.usage.output_tokens}) — output truncated`);
+      throw new Error(`Claude ${label} hit max_tokens (${output_tokens}) — output truncated`);
     }
     return block.text;
   }
