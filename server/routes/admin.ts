@@ -71,8 +71,12 @@ adminRouter.post('/campaigns', upload.array('pdfs', 3), async (req: Authenticate
       );
       console.log(`[pipeline] saved ${rows.length} content items`);
     } catch (err) {
-      console.error('[pipeline] error:', err);
-      await db.update(campaigns).set({ title: `Processing failed — ${filenames}` }).where(eq(campaigns.id, campaign.id));
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[pipeline] error:', msg);
+      await db
+        .update(campaigns)
+        .set({ title: `Processing failed — ${filenames}`, processingError: msg })
+        .where(eq(campaigns.id, campaign.id));
     }
   });
 });

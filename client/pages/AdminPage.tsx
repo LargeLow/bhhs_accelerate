@@ -27,7 +27,7 @@ function timeAgo(iso: string | null): string {
   return `${months}mo ago`;
 }
 
-async function fetchAllCampaigns(): Promise<(CampaignSummary & { pdfFilename: string; processedAt: string | null })[]> {
+async function fetchAllCampaigns(): Promise<(CampaignSummary & { pdfFilename: string; processedAt: string | null; processingError: string | null })[]> {
   const res = await fetch('/api/admin/campaigns', { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to load');
   return res.json();
@@ -153,7 +153,9 @@ export default function AdminPage() {
           clearTimeout(timeout);
           setUploading(false);
           if (updated.title.startsWith('Processing failed')) {
-            setUploadError(`Processing failed — check Render logs for details.`);
+            setUploadError(updated.processingError
+              ? `Processing failed: ${updated.processingError}`
+              : 'Processing failed — check Render logs for details.');
           } else {
             setUploadSuccess(`Ready: "${updated.title}" — preview and publish when ready.`);
           }
@@ -267,7 +269,12 @@ export default function AdminPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400 truncate">{c.sourceMonth} · {c.pdfFilename}</p>
                     <p className="font-medium text-gray-900">{c.title}</p>
-                    {c.strategyCore && <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{c.strategyCore}</p>}
+                    {c.title.startsWith('Processing failed') && c.processingError && (
+                      <p className="text-xs text-red-600 mt-1 font-mono break-all">{c.processingError}</p>
+                    )}
+                    {c.strategyCore && !c.title.startsWith('Processing failed') && (
+                      <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{c.strategyCore}</p>
+                    )}
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <Link to={`/campaign/${c.id}`} className="btn-secondary text-xs">

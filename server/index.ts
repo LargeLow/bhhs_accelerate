@@ -9,6 +9,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { loadSession } from './auth';
+import { runStartupMigrations } from './db';
 import { authRouter } from './routes/auth';
 import { campaignsRouter } from './routes/campaigns';
 import { adminRouter } from './routes/admin';
@@ -34,6 +35,10 @@ if (isProd) {
   app.use(express.static(distPath));
   app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
 }
+
+runStartupMigrations()
+  .then(() => console.log('[db] startup migrations complete'))
+  .catch((err) => console.error('[db] startup migration failed:', err));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -12,9 +12,10 @@ export const campaigns = pgTable('campaigns', {
   pdfFilename:  text('pdf_filename').notNull(),
   pdfData:      text('pdf_data').notNull(),       // base64-encoded PDF
   status:       campaignStatusEnum('status').default('draft').notNull(),
-  processedAt:  timestamp('processed_at'),
-  publishedAt:  timestamp('published_at'),
-  createdAt:    timestamp('created_at').defaultNow().notNull(),
+  processedAt:    timestamp('processed_at'),
+  publishedAt:    timestamp('published_at'),
+  processingError: text('processing_error'),
+  createdAt:      timestamp('created_at').defaultNow().notNull(),
 });
 
 export const contentItems = pgTable('content_items', {
